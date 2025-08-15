@@ -7,6 +7,7 @@ pub mod instructions;
 pub mod utils;
 
 use state::*;
+use instructions::*;
 
 declare_id!("AkcS5k7wDCVddJW2VexMV8MSGXYS9UYW5KXvkk47LZaQ");
 
@@ -36,6 +37,14 @@ pub mod universal_nft {
         instructions::get_nft_origin_handler(ctx, token_id)
     }
 
+    pub fn check_and_mark_message(
+        ctx: Context<CheckAndMarkMessage>,
+        chain_id: [u8; 32],
+        message_hash: [u8; 32],
+    ) -> Result<()> {
+        instructions::check_and_mark_message_handler(ctx, chain_id, message_hash)
+    }
+
     pub fn close_program_state(ctx: Context<CloseProgramState>) -> Result<()> {
         instructions::close_program_state_handler(ctx)
     }
@@ -44,7 +53,9 @@ pub mod universal_nft {
         instructions::close_nft_origin_handler(ctx)
     }
 
-    // TODO: Add other instruction handlers as they are implemented
+    pub fn close_replay_protection(ctx: Context<CloseReplayProtection>) -> Result<()> {
+        instructions::close_replay_protection_handler(ctx)
+    }
 }
 
 // Keep old Initialize for compatibility (no-op)

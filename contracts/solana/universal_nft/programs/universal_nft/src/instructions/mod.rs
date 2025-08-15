@@ -8,6 +8,8 @@ pub mod validate_message;
 pub mod close_program_state;
 pub mod close_nft_origin;
 pub mod get_nft_origin;
+pub mod check_and_mark_message;
+pub mod close_replay_protection;
 
 pub use initialize_program_state::*;
 pub use create_nft_origin::*;
@@ -19,3 +21,5 @@ pub use validate_message::*;
 pub use close_program_state::*;
 pub use close_nft_origin::*;
 pub use get_nft_origin::*;
+pub use check_and_mark_message::*;
+pub use close_replay_protection::*;
