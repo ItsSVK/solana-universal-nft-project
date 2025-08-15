@@ -2,45 +2,42 @@ use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum UniversalNftError {
+    #[msg("Invalid program state")]
+    InvalidProgramState,
+    
     #[msg("Program state already initialized")]
     ProgramStateAlreadyInitialized,
     
-    #[msg("Unauthorized operation")]
-    Unauthorized,
-    
-    #[msg("Invalid input")]
-    InvalidInput,
-    
-    #[msg("Account not found")]
-    AccountNotFound,
-    
-    #[msg("NFT already exists")]
-    NftAlreadyExists,
-    
-    #[msg("Collection not verified")]
-    CollectionNotVerified,
-    
-    #[msg("Invalid cross-chain message")]
-    InvalidCrossChainMessage,
+    #[msg("Invalid NFT origin data")]
+    InvalidNftOriginData,
     
     #[msg("Message already processed")]
     MessageAlreadyProcessed,
     
-    #[msg("Invalid token ID")]
-    InvalidTokenId,
+    #[msg("Invalid NFT mint - must have 0 decimals and supply of 1")]
+    InvalidNftMint,
     
-    #[msg("Token supply exceeded")]
-    TokenSupplyExceeded,
+    #[msg("Unauthorized operation")]
+    Unauthorized,
     
-    #[msg("Invalid metadata")]
-    InvalidMetadata,
+    #[msg("Token mint mismatch")]
+    TokenMintMismatch,
     
-    #[msg("PDA derivation failed")]
-    PdaDerivationFailed,
+    #[msg("Invalid token amount - must be exactly 1 for NFTs")]
+    InvalidTokenAmount,
     
-    #[msg("Insufficient funds")]
-    InsufficientFunds,
+    #[msg("Mint address mismatch with NFT origin")]
+    MintAddressMismatch,
     
-    #[msg("Invalid bump seed")]
-    InvalidBumpSeed,
+    #[msg("Invalid destination chain")]
+    InvalidDestinationChain,
+    
+    #[msg("Invalid recipient address")]
+    InvalidRecipientAddress,
+    
+    #[msg("Gateway call failed")]
+    GatewayCallFailed,
+    
+    #[msg("Invalid cross-chain payload")]
+    InvalidCrossChainPayload,
 }

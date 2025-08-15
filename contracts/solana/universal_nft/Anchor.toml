@@ -15,10 +15,10 @@ universal_nft = "AkcS5k7wDCVddJW2VexMV8MSGXYS9UYW5KXvkk47LZaQ"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
-# cluster = "localnet"
+# cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "ANCHOR_PROVIDER_URL=https://api.devnet.solana.com yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.test.ts"
-# test = "ANCHOR_PROVIDER_URL=http://127.0.0.1:8899 yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.test1.ts"
+# test = "ANCHOR_PROVIDER_URL=https://api.devnet.solana.com yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.test.ts"
+test = "ANCHOR_PROVIDER_URL=http://127.0.0.1:8899 yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.test.ts"

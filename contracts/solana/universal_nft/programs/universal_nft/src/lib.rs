@@ -45,6 +45,14 @@ pub mod universal_nft {
         instructions::check_and_mark_message_handler(ctx, chain_id, message_hash)
     }
 
+    pub fn burn_nft_and_transfer(
+        ctx: Context<BurnNftAndTransfer>,
+        destination_chain: u8,
+        recipient_address: [u8; 32],
+    ) -> Result<()> {
+        instructions::burn_nft_and_transfer_handler(ctx, destination_chain, recipient_address)
+    }
+
     pub fn close_program_state(ctx: Context<CloseProgramState>) -> Result<()> {
         instructions::close_program_state_handler(ctx)
     }
