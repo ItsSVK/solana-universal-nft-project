@@ -18,10 +18,33 @@ pub mod universal_nft {
         instructions::initialize_program_state_handler(ctx)
     }
 
+    pub fn create_nft_origin(
+        ctx: Context<CreateNftOrigin>,
+        token_id: u64,
+        origin_chain: u8,
+        origin_address: [u8; 32],
+        mint_address: Pubkey,
+        metadata_uri: String,
+    ) -> Result<()> {
+        instructions::create_nft_origin_handler(ctx, token_id, origin_chain, origin_address, mint_address, metadata_uri)
+    }
+
+    pub fn get_nft_origin(
+        ctx: Context<GetNftOrigin>,
+        token_id: u64,
+    ) -> Result<()> {
+        instructions::get_nft_origin_handler(ctx, token_id)
+    }
+
+    pub fn close_program_state(ctx: Context<CloseProgramState>) -> Result<()> {
+        instructions::close_program_state_handler(ctx)
+    }
+
+    pub fn close_nft_origin(ctx: Context<CloseNftOrigin>) -> Result<()> {
+        instructions::close_nft_origin_handler(ctx)
+    }
+
     // TODO: Add other instruction handlers as they are implemented
-    // pub fn create_nft_origin(ctx: Context<CreateNftOrigin>) -> Result<()> {
-    //     instructions::create_nft_origin_handler(ctx)
-    // }
 }
 
 // Keep old Initialize for compatibility (no-op)

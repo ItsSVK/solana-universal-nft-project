@@ -1,18 +1,21 @@
 use anchor_lang::prelude::*;
-use crate::state;
+use crate::constants::*;
+use crate::state::ProgramState;
 
 #[derive(Accounts)]
 pub struct InitializeProgramState<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
+    
     #[account(
         init,
         payer = payer,
-        seeds = [crate::constants::PROGRAM_STATE_SEED],
+        seeds = [PROGRAM_STATE_SEED],
         bump,
-        space = state::ProgramState::LEN,
+        space = ProgramState::LEN,
     )]
-    pub program_state: Account<'info, state::ProgramState>,
+    pub program_state: Account<'info, ProgramState>,
+    
     pub system_program: Program<'info, System>,
 }
 
