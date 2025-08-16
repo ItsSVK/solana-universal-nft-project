@@ -64,6 +64,15 @@ pub mod universal_nft {
     pub fn close_replay_protection(ctx: Context<CloseReplayProtection>) -> Result<()> {
         instructions::close_replay_protection_handler(ctx)
     }
+
+    pub fn mint_collection(
+        ctx: Context<MintCollection>,
+        name: String,
+        symbol: String,
+        uri: String,
+    ) -> Result<()> {
+        instructions::mint_collection_handler(ctx, name, symbol, uri)
+    }
 }
 
 // Keep old Initialize for compatibility (no-op)

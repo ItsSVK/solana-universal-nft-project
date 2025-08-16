@@ -40,4 +40,10 @@ pub enum UniversalNftError {
     
     #[msg("Invalid cross-chain payload")]
     InvalidCrossChainPayload,
+    
+    #[msg("Invalid collection data - name, symbol, or URI is invalid")]
+    InvalidCollectionData,
+    
+    #[msg("Collection NFT already minted")]
+    CollectionAlreadyMinted,
 }

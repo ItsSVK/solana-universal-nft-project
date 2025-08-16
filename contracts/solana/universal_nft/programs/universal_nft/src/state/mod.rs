@@ -10,6 +10,7 @@ pub mod close_nft_origin;
 pub mod get_nft_origin;
 pub mod close_replay_protection;
 pub mod burn_nft_and_transfer;
+pub mod mint_collection;
 
 pub use program_state::*;
 pub use nft_origin::*;
@@ -23,3 +24,4 @@ pub use close_nft_origin::*;
 pub use get_nft_origin::*;
 pub use close_replay_protection::*;
 pub use burn_nft_and_transfer::*;
+pub use mint_collection::*;
