@@ -46,4 +46,22 @@ pub enum UniversalNftError {
     
     #[msg("Collection NFT already minted")]
     CollectionAlreadyMinted,
+    
+    #[msg("Unsupported chain ID")]
+    UnsupportedChainId,
+    
+    #[msg("Invalid chain ID format")]
+    InvalidChainIdFormat,
+    
+    #[msg("Collection not minted yet")]
+    CollectionNotMinted,
+    
+    #[msg("Collection verification failed")]
+    CollectionVerificationFailed,
+    
+    #[msg("Collection not verified yet")]
+    CollectionNotVerified,
+    
+    #[msg("Collection assignment failed")]
+    CollectionAssignmentFailed,
 }

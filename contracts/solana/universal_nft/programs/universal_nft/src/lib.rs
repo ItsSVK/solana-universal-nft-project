@@ -73,6 +73,10 @@ pub mod universal_nft {
     ) -> Result<()> {
         instructions::mint_collection_handler(ctx, name, symbol, uri)
     }
+
+    pub fn verify_collection(ctx: Context<VerifyCollection>) -> Result<()> {
+        instructions::verify_collection_handler(ctx)
+    }
 }
 
 // Keep old Initialize for compatibility (no-op)

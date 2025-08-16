@@ -12,6 +12,7 @@ pub mod check_and_mark_message;
 pub mod close_replay_protection;
 pub mod burn_nft_and_transfer;
 pub mod mint_collection;
+pub mod verify_collection;
 
 pub use initialize_program_state::*;
 pub use create_nft_origin::*;
@@ -27,3 +28,4 @@ pub use check_and_mark_message::*;
 pub use close_replay_protection::*;
 pub use burn_nft_and_transfer::*;
 pub use mint_collection::*;
+pub use verify_collection::*;
