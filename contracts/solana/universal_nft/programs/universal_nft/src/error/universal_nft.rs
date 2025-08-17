@@ -64,4 +64,49 @@ pub enum UniversalNftError {
     
     #[msg("Collection assignment failed")]
     CollectionAssignmentFailed,
+    
+    #[msg("Payload size is too small")]
+    PayloadTooSmall,
+    
+    #[msg("Payload size is too large")]
+    PayloadTooLarge,
+    
+    #[msg("Invalid payload bounds - min must be <= max and within global limits")]
+    InvalidPayloadBounds,
+    
+    #[msg("Invalid signature - signature verification failed")]
+    InvalidSignature,
+    
+    #[msg("Insufficient signatures - not enough valid signatures provided")]
+    InsufficientSignatures,
+    
+    #[msg("Unauthorized validator - signer is not an authorized validator")]
+    UnauthorizedValidator,
+    
+    #[msg("Invalid signature threshold - threshold calculation failed")]
+    InvalidSignatureThreshold,
+    
+    #[msg("Invalid validator data - validator information is invalid")]
+    InvalidValidatorData,
+    
+    #[msg("Too many validators - maximum validator limit exceeded")]
+    TooManyValidators,
+    
+    #[msg("Unauthorized gateway - caller is not an authorized gateway")]
+    UnauthorizedGateway,
+    
+    #[msg("Gateway not active - gateway is authorized but not currently active")]
+    GatewayNotActive,
+    
+    #[msg("Invalid gateway data - gateway information is invalid")]
+    InvalidGatewayData,
+    
+    #[msg("Too many gateways - maximum gateway limit exceeded")]
+    TooManyGateways,
+    
+    #[msg("Invalid cross-chain message - validation pipeline failed")]
+    InvalidCrossChainMessage,
+    
+    #[msg("Invalid payload - payload validation failed")]
+    InvalidPayload,
 }

@@ -5,6 +5,10 @@ pub mod nft_origin;
 pub mod chain_validation;
 pub mod collection_assignment;
 pub mod collection_management;
+pub mod payload_validation;
+pub mod signature_validation;
+pub mod gateway_authorization;
+pub mod validation_pipeline;
 
 pub use pda::*;
 pub use validation::*;
@@ -13,3 +17,7 @@ pub use nft_origin::*;
 pub use chain_validation::*;
 pub use collection_assignment::*;
 pub use collection_management::*;
+pub use payload_validation::*;
+pub use signature_validation::*;
+pub use gateway_authorization::*;
+pub use validation_pipeline::*;
