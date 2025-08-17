@@ -41,11 +41,14 @@ describe('replay_protection', () => {
     console.log('- Bump:', replayProtectionAccount.bump);
     console.log('- Processed at:', replayProtectionAccount.processedAt);
     console.log('- Chain ID:', replayProtectionAccount.chainId);
-    console.log('- Message Hash:', replayProtectionAccount.messageHash);
+    console.log(
+      '- Gateway Message ID:',
+      replayProtectionAccount.gatewayMessageId
+    );
 
     // Verify the data matches our input
     expect(replayProtectionAccount.chainId).to.deep.equal(chainId);
-    expect(replayProtectionAccount.messageHash).to.deep.equal(messageHash);
+    expect(replayProtectionAccount.gatewayMessageId).to.deep.equal(messageHash);
     expect(replayProtectionAccount.processedAt.toNumber()).to.be.greaterThan(0);
   });
 

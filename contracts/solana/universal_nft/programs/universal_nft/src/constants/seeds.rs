@@ -10,5 +10,11 @@ pub const NFT_ORIGIN_SEED: &[u8] = b"nft_origin";
 /// Replay protection PDA seed
 pub const REPLAY_SEED: &[u8] = b"replay";
 
+/// Gateway replay protection PDA seed (more specific)
+pub const GATEWAY_REPLAY_SEED: &[u8] = b"gateway_replay";
+
+/// Gateway replay protection PDA seed for new implementation
+pub const GATEWAY_REPLAY_PROTECTION_SEED: &[u8] = b"gateway_replay_protection";
+
 /// Cross-chain message PDA seed
 pub const MESSAGE_SEED: &[u8] = b"cross_chain_message";

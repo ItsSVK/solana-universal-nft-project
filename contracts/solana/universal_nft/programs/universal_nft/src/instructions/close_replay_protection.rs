@@ -7,7 +7,7 @@ pub fn close_replay_protection_handler(ctx: Context<CloseReplayProtection>) -> R
     
     msg!("Closing replay protection account for:");
     msg!("Chain ID: {:?}", replay_protection.chain_id);
-    msg!("Message Hash: {:?}", replay_protection.message_hash);
+    msg!("Gateway Message ID: {:?}", replay_protection.gateway_message_id);
     msg!("Processed at: {}", replay_protection.processed_at);
     
     // The account will be closed and rent returned to payer

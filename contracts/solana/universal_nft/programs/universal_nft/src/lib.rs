@@ -40,17 +40,34 @@ pub mod universal_nft {
     pub fn check_and_mark_message(
         ctx: Context<CheckAndMarkMessage>,
         chain_id: [u8; 32],
-        message_hash: [u8; 32],
+        gateway_message_id: [u8; 32],
     ) -> Result<()> {
-        instructions::check_and_mark_message_handler(ctx, chain_id, message_hash)
+        instructions::check_and_mark_message_handler(ctx, chain_id, gateway_message_id)
+    }
+
+    pub fn check_and_mark_message_with_metadata(
+        ctx: Context<CheckAndMarkMessageWithMetadata>,
+        chain_id: [u8; 32],
+        gateway_message_id: [u8; 32],
+        metadata: Option<ReplayProtectionMetadata>,
+    ) -> Result<()> {
+        instructions::check_and_mark_message_with_metadata_handler(ctx, chain_id, gateway_message_id, metadata)
     }
 
     pub fn burn_nft_and_transfer(
         ctx: Context<BurnNftAndTransfer>,
-        destination_chain: u8,
-        recipient_address: [u8; 32],
+        params: BurnNftAndTransferParams,
     ) -> Result<()> {
-        instructions::burn_nft_and_transfer_handler(ctx, destination_chain, recipient_address)
+        instructions::burn_nft_and_transfer(ctx, params)
+    }
+
+    pub fn mint_nft(
+        ctx: Context<MintNft>,
+        _chain_id: u8,
+        _gateway_message_id: [u8; 32],
+        params: CrossChainMintParams,
+    ) -> Result<()> {
+        instructions::mint_nft_handler(ctx, params)
     }
 
     pub fn close_program_state(ctx: Context<CloseProgramState>) -> Result<()> {

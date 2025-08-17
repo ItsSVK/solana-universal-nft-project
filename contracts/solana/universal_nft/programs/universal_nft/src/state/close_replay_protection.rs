@@ -13,3 +13,9 @@ pub struct CloseReplayProtection<'info> {
     )]
     pub replay_protection: Account<'info, ReplayProtection>,
 }
+
+pub fn close_replay_protection_handler(ctx: Context<CloseReplayProtection>) -> Result<()> {
+    msg!("Gateway Message ID: {:?}", ctx.accounts.replay_protection.gateway_message_id);
+    msg!("Closing replay protection account");
+    Ok(())
+}
