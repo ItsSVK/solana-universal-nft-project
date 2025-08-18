@@ -103,6 +103,20 @@ pub mod universal_nft {
     pub fn verify_collection(ctx: Context<VerifyCollection>) -> Result<()> {
         instructions::verify_collection_handler(ctx)
     }
+
+    /// ZetaChain Gateway on_revert entrypoint for handling failed cross-chain transfers
+    /// 
+    /// This instruction is called by the Gateway when a cross-chain transfer fails.
+    /// It logs the revert information for debugging and monitoring purposes.
+    /// For NFTs, this is a no-op since failed transfers don't create state on the destination chain.
+    pub fn on_revert(
+        ctx: Context<OnRevert>,
+        sender: [u8; 32],
+        message: Vec<u8>,
+        reason: Vec<u8>,
+    ) -> Result<()> {
+        instructions::on_revert_handler(ctx, sender, message, reason)
+    }
 }
 
 // Keep old Initialize for compatibility (no-op)
