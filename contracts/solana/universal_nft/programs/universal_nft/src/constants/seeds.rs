@@ -18,3 +18,9 @@ pub const GATEWAY_REPLAY_PROTECTION_SEED: &[u8] = b"gateway_replay_protection";
 
 /// Cross-chain message PDA seed
 pub const MESSAGE_SEED: &[u8] = b"cross_chain_message";
+
+/// Collection metadata PDA seed
+pub const COLLECTION_METADATA_SEED: &[u8] = b"collection_metadata";
+
+/// Collection master edition PDA seed
+pub const COLLECTION_MASTER_EDITION_SEED: &[u8] = b"collection_master_edition";

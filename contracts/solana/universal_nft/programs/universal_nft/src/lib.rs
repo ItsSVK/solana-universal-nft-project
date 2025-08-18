@@ -8,6 +8,7 @@ pub mod utils;
 
 use state::*;
 use instructions::*;
+use instructions::mint_nft::OnCall;
 
 declare_id!("AkcS5k7wDCVddJW2VexMV8MSGXYS9UYW5KXvkk47LZaQ");
 
@@ -68,6 +69,14 @@ pub mod universal_nft {
         params: CrossChainMintParams,
     ) -> Result<()> {
         instructions::mint_nft_handler(ctx, params)
+    }
+
+    /// ZetaChain Gateway on_call entrypoint for incoming cross-chain NFT minting
+    /// 
+    /// This instruction is called by the Gateway when a cross-chain message is received.
+    /// It implements the full validation pipeline and NFT minting process.
+    pub fn on_call(ctx: Context<OnCall>, payload: Vec<u8>) -> Result<()> {
+        instructions::on_call_handler(ctx, payload)
     }
 
     pub fn close_program_state(ctx: Context<CloseProgramState>) -> Result<()> {
