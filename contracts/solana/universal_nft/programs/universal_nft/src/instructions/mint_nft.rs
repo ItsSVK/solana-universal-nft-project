@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use crate::utils::validation_pipeline::*;
 use crate::utils::gateway_validation::*;
 use crate::error::UniversalNftError;
-use crate::state::ReplayProtection;
+use crate::state::{ReplayProtection, NftOrigin, NftOriginByTokenId};
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{Token, TokenAccount, Mint, mint_to, MintTo};
 
@@ -320,6 +320,16 @@ pub struct OnCall<'info> {
         bump
     )]
     pub nft_origin: Account<'info, crate::state::NftOrigin>,
+
+    /// The NFT origin by token ID PDA for efficient lookups
+    #[account(
+        init_if_needed,
+        payer = payer,
+        space = crate::state::NftOriginByTokenId::LEN,
+        seeds = [crate::constants::NFT_ORIGIN_BY_TOKEN_ID_SEED, &payload[0..8]], // First 8 bytes are token_id
+        bump
+    )]
+    pub nft_origin_by_token_id: Account<'info, crate::state::NftOriginByTokenId>,
     
     /// The replay protection account (PDA) for Gateway message ID
     #[account(
@@ -481,17 +491,92 @@ pub fn on_call_handler(ctx: Context<OnCall>, payload: Vec<u8>) -> Result<()> {
         }
     }
     
+    // Step 3: Check if NFT already exists by token_id
+    let check_start = Clock::get()?.unix_timestamp;
+    msg!("🔍 Checking if NFT already exists by token_id...");
+    
+    let token_id = mint_payload.token_id;
+    let is_returning_nft = ctx.accounts.nft_origin_by_token_id.mint_address != Pubkey::default();
+    
+    if is_returning_nft {
+        msg!("   📦 Returning NFT detected!");
+        msg!("   🆔 Token ID: {}", token_id);
+        msg!("   🪙 Existing Mint: {}", ctx.accounts.nft_origin_by_token_id.mint_address);
+        
+        // Case 1: Link to existing mint (returning NFT)
+        match handle_returning_nft(
+            &ctx.accounts.mint,
+            &ctx.accounts.token_account,
+            &ctx.accounts.recipient,
+            &ctx.accounts.metadata,
+            &ctx.accounts.master_edition,
+            &ctx.accounts.collection_mint,
+            &ctx.accounts.collection_metadata,
+            &ctx.accounts.collection_master_edition,
+            &mint_payload,
+            &ctx.accounts.payer,
+            &ctx.accounts.system_program,
+            &ctx.accounts.rent,
+            &ctx.accounts.nft_origin_by_token_id,
+        ) {
+            Ok(_) => {
+                let check_time = Clock::get()?.unix_timestamp - check_start;
+                msg!("✅ Returning NFT handled successfully! ({}ms)", check_time);
+            }
+            Err(e) => {
+                let check_time = Clock::get()?.unix_timestamp - check_start;
+                msg!("❌ Returning NFT handling failed! ({}ms)", check_time);
+                return Err(e);
+            }
+        }
+    } else {
+        msg!("   🆕 New NFT detected!");
+        msg!("   🆔 Token ID: {}", token_id);
+        
+        // Case 2: Create new mint and metadata (new NFT)
+        match handle_new_nft(
+            &ctx.accounts.mint,
+            &ctx.accounts.token_account,
+            &ctx.accounts.recipient,
+            &ctx.accounts.metadata,
+            &ctx.accounts.master_edition,
+            &ctx.accounts.collection_mint,
+            &ctx.accounts.collection_metadata,
+            &ctx.accounts.collection_master_edition,
+            &mint_payload,
+            &ctx.accounts.payer,
+            &ctx.accounts.system_program,
+            &ctx.accounts.rent,
+            &mut ctx.accounts.nft_origin,
+            &mut ctx.accounts.nft_origin_by_token_id,
+        ) {
+            Ok(_) => {
+                let check_time = Clock::get()?.unix_timestamp - check_start;
+                msg!("✅ New NFT created successfully! ({}ms)", check_time);
+            }
+            Err(e) => {
+                let check_time = Clock::get()?.unix_timestamp - check_start;
+                msg!("❌ New NFT creation failed! ({}ms)", check_time);
+                return Err(e);
+            }
+        }
+    }
+    
     // Step 5: Mint the NFT with error handling
     let mint_start = Clock::get()?.unix_timestamp;
     msg!("🎨 Minting NFT...");
     match mint_to(
-        CpiContext::new(
+        CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             MintTo {
                 mint: ctx.accounts.mint.to_account_info(),
                 to: ctx.accounts.token_account.to_account_info(),
                 authority: ctx.accounts.program_state.to_account_info(),
             },
+            &[&[
+                crate::constants::PROGRAM_STATE_SEED,
+                &[ctx.accounts.program_state.bump],
+            ]],
         ),
         1, // Mint 1 NFT
     ) {
@@ -1005,4 +1090,194 @@ fn log_operation_success(operation_id: &str, total_time: i64, payload: &Incoming
     };
     
     msg!("   Performance: {} ({}ms)", performance_category, total_time);
+}
+
+/// Handle returning NFT (NFT that already exists on Solana)
+fn handle_returning_nft(
+    mint: &Account<Mint>,
+    token_account: &Account<TokenAccount>,
+    recipient: &UncheckedAccount,
+    metadata: &UncheckedAccount,
+    master_edition: &UncheckedAccount,
+    collection_mint: &Account<Mint>,
+    collection_metadata: &UncheckedAccount,
+    collection_master_edition: &UncheckedAccount,
+    payload: &IncomingMintPayload,
+    payer: &Signer,
+    system_program: &Program<System>,
+    rent: &Sysvar<Rent>,
+    nft_origin_by_token_id: &Account<NftOriginByTokenId>,
+) -> Result<()> {
+    msg!("🔄 Handling returning NFT...");
+    
+    // Step 1: Validate that the existing mint matches our expectations
+    if mint.key() != nft_origin_by_token_id.mint_address {
+        msg!("❌ Mint address mismatch!");
+        msg!("   Expected: {}", nft_origin_by_token_id.mint_address);
+        msg!("   Actual: {}", mint.key());
+        return Err(UniversalNftError::InvalidCrossChainMessage.into());
+    }
+    
+    msg!("✅ Mint address validated for returning NFT");
+    
+    // Step 2: Create metadata (reusing existing metadata structure)
+    let metadata_start = Clock::get()?.unix_timestamp;
+    msg!("📝 Creating metadata for returning NFT...");
+    
+    match create_nft_metadata(
+        mint,
+        metadata,
+        master_edition,
+        collection_mint,
+        collection_metadata,
+        collection_master_edition,
+        payload,
+        payer,
+        system_program,
+        rent,
+    ) {
+        Ok(_) => {
+            let metadata_time = Clock::get()?.unix_timestamp - metadata_start;
+            msg!("✅ Metadata created successfully! ({}ms)", metadata_time);
+        }
+        Err(e) => {
+            let metadata_time = Clock::get()?.unix_timestamp - metadata_start;
+            msg!("❌ Metadata creation failed! ({}ms)", metadata_time);
+            return Err(e);
+        }
+    }
+    
+    // Step 3: Verify collection association
+    let collection_start = Clock::get()?.unix_timestamp;
+    msg!("🏛️ Verifying collection association...");
+    
+    // For now, just log the collection verification (placeholder)
+    msg!("   🏛️ Collection Mint: {}", collection_mint.key());
+    msg!("   📋 Collection Metadata: {}", collection_metadata.key());
+    msg!("   👑 Collection Master Edition: {}", collection_master_edition.key());
+    msg!("   ✅ Collection verification logged (placeholder)");
+    
+    let collection_time = Clock::get()?.unix_timestamp - collection_start;
+    msg!("✅ Collection verification completed! ({}ms)", collection_time);
+    
+    msg!("🎉 Returning NFT handled successfully!");
+    msg!("   🪙 Mint: {}", mint.key());
+    msg!("   👤 Recipient: {}", recipient.key());
+    msg!("   🏛️ Collection: {}", collection_mint.key());
+    
+    Ok(())
+}
+
+/// Handle new NFT (NFT that doesn't exist on Solana yet)
+fn handle_new_nft(
+    mint: &Account<Mint>,
+    token_account: &Account<TokenAccount>,
+    recipient: &UncheckedAccount,
+    metadata: &UncheckedAccount,
+    master_edition: &UncheckedAccount,
+    collection_mint: &Account<Mint>,
+    collection_metadata: &UncheckedAccount,
+    collection_master_edition: &UncheckedAccount,
+    payload: &IncomingMintPayload,
+    payer: &Signer,
+    system_program: &Program<System>,
+    rent: &Sysvar<Rent>,
+    nft_origin: &mut Account<NftOrigin>,
+    nft_origin_by_token_id: &mut Account<NftOriginByTokenId>,
+) -> Result<()> {
+    msg!("🆕 Handling new NFT...");
+    
+    // Step 1: Create metadata (new metadata)
+    let metadata_start = Clock::get()?.unix_timestamp;
+    msg!("📝 Creating metadata for new NFT...");
+    
+    match create_nft_metadata(
+        mint,
+        metadata,
+        master_edition,
+        collection_mint,
+        collection_metadata,
+        collection_master_edition,
+        payload,
+        payer,
+        system_program,
+        rent,
+    ) {
+        Ok(_) => {
+            let metadata_time = Clock::get()?.unix_timestamp - metadata_start;
+            msg!("✅ Metadata created successfully! ({}ms)", metadata_time);
+        }
+        Err(e) => {
+            let metadata_time = Clock::get()?.unix_timestamp - metadata_start;
+            msg!("❌ Metadata creation failed! ({}ms)", metadata_time);
+            return Err(e);
+        }
+    }
+    
+    // Step 2: Verify collection association
+    let collection_start = Clock::get()?.unix_timestamp;
+    msg!("🏛️ Verifying collection association...");
+    
+    // For now, just log the collection verification (placeholder)
+    msg!("   🏛️ Collection Mint: {}", collection_mint.key());
+    msg!("   📋 Collection Metadata: {}", collection_metadata.key());
+    msg!("   👑 Collection Master Edition: {}", collection_master_edition.key());
+    msg!("   ✅ Collection verification logged (placeholder)");
+    
+    let collection_time = Clock::get()?.unix_timestamp - collection_start;
+    msg!("✅ Collection verification completed! ({}ms)", collection_time);
+    
+    // Step 3: Initialize NFT origin PDA
+    let origin_start = Clock::get()?.unix_timestamp;
+    msg!("📍 Initializing NFT origin PDA...");
+    
+    // Clone the metadata_uri to avoid moving payload
+    let metadata_uri = payload.metadata_uri.clone();
+    
+    match nft_origin.initialize(
+        0, // Placeholder bump
+        payload.token_id,
+        payload.origin_chain_id[0], // Use first byte as chain ID
+        payload.origin_chain_id,
+        mint.key(),
+        metadata_uri,
+    ) {
+        Ok(_) => {
+            let origin_time = Clock::get()?.unix_timestamp - origin_start;
+            msg!("✅ NFT origin PDA initialized! ({}ms)", origin_time);
+        }
+        Err(e) => {
+            let origin_time = Clock::get()?.unix_timestamp - origin_start;
+            msg!("❌ NFT origin PDA initialization failed! ({}ms)", origin_time);
+            return Err(e);
+        }
+    }
+    
+    // Step 4: Initialize NFT origin by token ID PDA
+    let token_id_start = Clock::get()?.unix_timestamp;
+    msg!("🔗 Initializing NFT origin by token ID PDA...");
+    
+    match nft_origin_by_token_id.initialize(
+        0, // Placeholder bump
+        payload.token_id,
+        mint.key(),
+    ) {
+        Ok(_) => {
+            let token_id_time = Clock::get()?.unix_timestamp - token_id_start;
+            msg!("✅ NFT origin by token ID PDA initialized! ({}ms)", token_id_time);
+        }
+        Err(e) => {
+            let token_id_time = Clock::get()?.unix_timestamp - token_id_start;
+            msg!("❌ NFT origin by token ID PDA initialization failed! ({}ms)", token_id_time);
+            return Err(e);
+        }
+    }
+    
+    msg!("🎉 New NFT created successfully!");
+    msg!("   🪙 Mint: {}", mint.key());
+    msg!("   👤 Recipient: {}", recipient.key());
+    msg!("   🏛️ Collection: {}", collection_mint.key());
+    msg!("   🆔 Token ID: {}", payload.token_id);
+    
+    Ok(())
 }

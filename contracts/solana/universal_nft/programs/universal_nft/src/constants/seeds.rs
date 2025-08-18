@@ -24,3 +24,6 @@ pub const COLLECTION_METADATA_SEED: &[u8] = b"collection_metadata";
 
 /// Collection master edition PDA seed
 pub const COLLECTION_MASTER_EDITION_SEED: &[u8] = b"collection_master_edition";
+
+/// NFT origin by token ID PDA seed
+pub const NFT_ORIGIN_BY_TOKEN_ID_SEED: &[u8] = b"nft_origin_by_token_id";
