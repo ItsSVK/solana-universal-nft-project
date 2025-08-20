@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use crate::error::universal_nft::UniversalNftError;
+use crate::utils::gateway_validation::validate_gateway_caller_with_sysvar;
 
 // ZetaChain Gateway program ID (this should be the actual Gateway program ID)
 // For now, we'll use a placeholder - this should be updated with the real Gateway program ID
@@ -21,6 +22,11 @@ pub struct OnRevert<'info> {
 
     /// The System program for account operations
     pub system_program: Program<'info, System>,
+    
+    /// The instructions sysvar for Gateway validation
+    /// CHECK: This account must be the instructions sysvar
+    #[account(address = anchor_lang::solana_program::sysvar::instructions::ID)]
+    pub instructions_sysvar: UncheckedAccount<'info>,
 }
 
 /// Handler for the on_revert instruction
@@ -36,17 +42,15 @@ pub fn on_revert_handler(
     message: Vec<u8>,
     reason: Vec<u8>,
 ) -> Result<()> {
-    // Validate that the caller is the ZetaChain Gateway program
-    let gateway_program_id = ctx.accounts.gateway_program.key();
-    let expected_gateway_id = Pubkey::new_from_array([
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    ]); // Placeholder - should be actual Gateway program ID
+    // Validate that the caller is the ZetaChain Gateway program using sysvar::instructions
+    let gateway_validation = validate_gateway_caller_with_sysvar(
+        &ctx.accounts.instructions_sysvar,
+        0, // Current instruction index
+    )?;
     
-    require!(
-        gateway_program_id == expected_gateway_id,
-        UniversalNftError::UnauthorizedGateway
-    );
+    msg!("✅ Gateway caller validation successful for on_revert!");
+    msg!("   Gateway Program ID: {}", gateway_validation.caller_program_id);
+    msg!("   Instruction Index: {}", gateway_validation.instruction_index);
 
     // Log the revert information for debugging and monitoring
     msg!("=== on_revert called ===");

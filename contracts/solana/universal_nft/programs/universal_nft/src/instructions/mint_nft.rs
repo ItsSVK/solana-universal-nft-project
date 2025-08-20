@@ -353,6 +353,11 @@ pub struct OnCall<'info> {
     
     /// The rent sysvar
     pub rent: Sysvar<'info, Rent>,
+    
+    /// The instructions sysvar for Gateway validation
+    /// CHECK: This account must be the instructions sysvar
+    #[account(address = anchor_lang::solana_program::sysvar::instructions::ID)]
+    pub instructions_sysvar: UncheckedAccount<'info>,
 }
 
 /// Cross-chain message payload structure for incoming NFT minting
@@ -443,11 +448,15 @@ pub fn on_call_handler(ctx: Context<OnCall>, payload: Vec<u8>) -> Result<()> {
     msg!("   Symbol: {} ({} chars)", mint_payload.symbol, mint_payload.symbol.len());
     msg!("   Recipient Address: {:?}", mint_payload.recipient_address);
     
-    // Step 3: Validate that the caller is the ZetaChain Gateway (simplified)
-    let _gateway_validation = validate_gateway_caller_on_call(
-        &ctx.accounts.replay_protection,
-        &mint_payload,
+    // Step 3: Validate that the caller is the ZetaChain Gateway using sysvar::instructions
+    let gateway_validation = validate_gateway_caller_with_sysvar(
+        &ctx.accounts.instructions_sysvar,
+        0, // Current instruction index
     )?;
+    
+    msg!("✅ Gateway caller validation successful!");
+    msg!("   Gateway Program ID: {}", gateway_validation.caller_program_id);
+    msg!("   Instruction Index: {}", gateway_validation.instruction_index);
     
     // Step 4: Check replay protection (simplified)
     if ctx.accounts.replay_protection.processed_at > 0 {
