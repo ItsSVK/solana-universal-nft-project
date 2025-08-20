@@ -109,4 +109,35 @@ pub enum UniversalNftError {
     
     #[msg("Invalid payload - payload validation failed")]
     InvalidPayload,
+    
+    // Cross-chain message format errors
+    #[msg("Invalid message type - must be 1-4")]
+    InvalidMessageType,
+    
+    #[msg("Invalid token ID - must be greater than 0")]
+    InvalidTokenId,
+    
+    #[msg("Invalid metadata URI - cannot be empty")]
+    InvalidMetadataUri,
+    
+    #[msg("Invalid NFT name - cannot be empty")]
+    InvalidNftName,
+    
+    #[msg("Invalid NFT symbol - cannot be empty")]
+    InvalidNftSymbol,
+    
+    #[msg("Message too old - timestamp exceeds maximum age")]
+    MessageTooOld,
+    
+    #[msg("Message too large - exceeds maximum size limit")]
+    MessageTooLarge,
+    
+    #[msg("Message too small - below minimum size limit")]
+    MessageTooSmall,
+    
+    #[msg("Serialization error - failed to serialize message")]
+    SerializationError,
+    
+    #[msg("Deserialization error - failed to deserialize message")]
+    DeserializationError,
 }

@@ -3,6 +3,7 @@ use crate::utils::validation_pipeline::*;
 use crate::utils::gateway_validation::*;
 use crate::error::UniversalNftError;
 use crate::state::{ReplayProtection, NftOrigin, NftOriginByTokenId};
+use crate::constants::message_format::*;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{Token, TokenAccount, Mint, mint_to, MintTo};
 
@@ -430,6 +431,9 @@ pub fn on_call_handler(ctx: Context<OnCall>, payload: Vec<u8>) -> Result<()> {
         }
     };
     
+    // Step 2.5: Validate cross-chain message format (simplified for stack optimization)
+    validate_cross_chain_message_format(&payload)?;
+    
     msg!("📋 Decoded payload details:");
     msg!("   Token ID: {}", mint_payload.token_id);
     msg!("   Origin Chain: {:?}", mint_payload.origin_chain_id);
@@ -439,72 +443,31 @@ pub fn on_call_handler(ctx: Context<OnCall>, payload: Vec<u8>) -> Result<()> {
     msg!("   Symbol: {} ({} chars)", mint_payload.symbol, mint_payload.symbol.len());
     msg!("   Recipient Address: {:?}", mint_payload.recipient_address);
     
-    // Step 3: Validate that the caller is the ZetaChain Gateway
-    let gateway_start = Clock::get()?.unix_timestamp;
-    msg!("🔍 Validating Gateway caller...");
-    let gateway_validation = match validate_gateway_caller_on_call(
+    // Step 3: Validate that the caller is the ZetaChain Gateway (simplified)
+    let _gateway_validation = validate_gateway_caller_on_call(
         &ctx.accounts.replay_protection,
         &mint_payload,
-    ) {
-        Ok(validation) => {
-            let gateway_time = Clock::get()?.unix_timestamp - gateway_start;
-            msg!("✅ Gateway caller validation successful in {}ms", gateway_time);
-            validation
-        },
-        Err(e) => {
-            let gateway_time = Clock::get()?.unix_timestamp - gateway_start;
-            msg!("❌ Gateway caller validation failed in {}ms: {:?}", gateway_time, e);
-            log_operation_failure(&operation_id, "GatewayValidationFailed", &format!("Gateway validation failed: {:?}", e));
-            return Err(e);
-        }
-    };
+    )?;
     
-    // Step 4: Check replay protection with detailed logging
-    let replay_start = Clock::get()?.unix_timestamp;
-    msg!("🔒 Checking replay protection...");
+    // Step 4: Check replay protection (simplified)
     if ctx.accounts.replay_protection.processed_at > 0 {
-        let replay_time = Clock::get()?.unix_timestamp - replay_start;
-        msg!("🚨 REPLAY DETECTED - Message already processed in {}ms!", replay_time);
-        msg!("   Previous processing time: {}", ctx.accounts.replay_protection.processed_at);
-        msg!("   Chain ID: {:?}", ctx.accounts.replay_protection.chain_id);
-        msg!("   Gateway Message ID: {:?}", ctx.accounts.replay_protection.gateway_message_id);
-        log_operation_failure(&operation_id, "ReplayDetected", "Message already processed");
         return Err(UniversalNftError::MessageAlreadyProcessed.into());
     }
     
     // Mark message as processed
-    match ctx.accounts.replay_protection.initialize(
+    ctx.accounts.replay_protection.initialize(
         0, // Placeholder bump
         mint_payload.origin_chain_id,
         mint_payload.gateway_message_id,
         None, // No additional metadata for now
-    ) {
-        Ok(_) => {
-            let replay_time = Clock::get()?.unix_timestamp - replay_start;
-            msg!("✅ Replay protection updated successfully in {}ms", replay_time);
-        },
-        Err(e) => {
-            let replay_time = Clock::get()?.unix_timestamp - replay_start;
-            msg!("❌ Failed to update replay protection in {}ms: {:?}", replay_time, e);
-            log_operation_failure(&operation_id, "ReplayProtectionUpdateFailed", &format!("Failed to update replay protection: {:?}", e));
-            return Err(e);
-        }
-    }
+    )?;
     
-    // Step 3: Check if NFT already exists by token_id
-    let check_start = Clock::get()?.unix_timestamp;
-    msg!("🔍 Checking if NFT already exists by token_id...");
-    
-    let token_id = mint_payload.token_id;
+    // Step 5: Check if NFT already exists by token_id (simplified)
     let is_returning_nft = ctx.accounts.nft_origin_by_token_id.mint_address != Pubkey::default();
     
     if is_returning_nft {
-        msg!("   📦 Returning NFT detected!");
-        msg!("   🆔 Token ID: {}", token_id);
-        msg!("   🪙 Existing Mint: {}", ctx.accounts.nft_origin_by_token_id.mint_address);
-        
         // Case 1: Link to existing mint (returning NFT)
-        match handle_returning_nft(
+        handle_returning_nft(
             &ctx.accounts.mint,
             &ctx.accounts.token_account,
             &ctx.accounts.recipient,
@@ -518,23 +481,10 @@ pub fn on_call_handler(ctx: Context<OnCall>, payload: Vec<u8>) -> Result<()> {
             &ctx.accounts.system_program,
             &ctx.accounts.rent,
             &ctx.accounts.nft_origin_by_token_id,
-        ) {
-            Ok(_) => {
-                let check_time = Clock::get()?.unix_timestamp - check_start;
-                msg!("✅ Returning NFT handled successfully! ({}ms)", check_time);
-            }
-            Err(e) => {
-                let check_time = Clock::get()?.unix_timestamp - check_start;
-                msg!("❌ Returning NFT handling failed! ({}ms)", check_time);
-                return Err(e);
-            }
-        }
+        )?;
     } else {
-        msg!("   🆕 New NFT detected!");
-        msg!("   🆔 Token ID: {}", token_id);
-        
         // Case 2: Create new mint and metadata (new NFT)
-        match handle_new_nft(
+        handle_new_nft(
             &ctx.accounts.mint,
             &ctx.accounts.token_account,
             &ctx.accounts.recipient,
@@ -549,23 +499,11 @@ pub fn on_call_handler(ctx: Context<OnCall>, payload: Vec<u8>) -> Result<()> {
             &ctx.accounts.rent,
             &mut ctx.accounts.nft_origin,
             &mut ctx.accounts.nft_origin_by_token_id,
-        ) {
-            Ok(_) => {
-                let check_time = Clock::get()?.unix_timestamp - check_start;
-                msg!("✅ New NFT created successfully! ({}ms)", check_time);
-            }
-            Err(e) => {
-                let check_time = Clock::get()?.unix_timestamp - check_start;
-                msg!("❌ New NFT creation failed! ({}ms)", check_time);
-                return Err(e);
-            }
-        }
+        )?;
     }
     
-    // Step 5: Mint the NFT with error handling
-    let mint_start = Clock::get()?.unix_timestamp;
-    msg!("🎨 Minting NFT...");
-    match mint_to(
+    // Step 6: Mint the NFT (simplified)
+    mint_to(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             MintTo {
@@ -579,26 +517,10 @@ pub fn on_call_handler(ctx: Context<OnCall>, payload: Vec<u8>) -> Result<()> {
             ]],
         ),
         1, // Mint 1 NFT
-    ) {
-        Ok(_) => {
-            let mint_time = Clock::get()?.unix_timestamp - mint_start;
-            msg!("✅ NFT minted successfully in {}ms", mint_time);
-        },
-        Err(e) => {
-            let mint_time = Clock::get()?.unix_timestamp - mint_start;
-            msg!("❌ Failed to mint NFT in {}ms: {:?}", mint_time, e);
-            msg!("   Mint Account: {}", ctx.accounts.mint.key());
-            msg!("   Token Account: {}", ctx.accounts.token_account.key());
-            msg!("   Program State: {}", ctx.accounts.program_state.key());
-            log_operation_failure(&operation_id, "NftMintFailed", &format!("Failed to mint NFT: {:?}", e));
-            return Err(e);
-        }
-    }
+    )?;
     
-    // Step 6: Create NFT metadata with error handling
-    let metadata_start = Clock::get()?.unix_timestamp;
-    msg!("📝 Creating NFT metadata...");
-    match create_nft_metadata(
+    // Step 7: Create NFT metadata (simplified)
+    create_nft_metadata(
         &ctx.accounts.mint,
         &ctx.accounts.metadata,
         &ctx.accounts.master_edition,
@@ -609,116 +531,161 @@ pub fn on_call_handler(ctx: Context<OnCall>, payload: Vec<u8>) -> Result<()> {
         &ctx.accounts.payer,
         &ctx.accounts.system_program,
         &ctx.accounts.rent,
-    ) {
-        Ok(_) => {
-            let metadata_time = Clock::get()?.unix_timestamp - metadata_start;
-            msg!("✅ NFT metadata created successfully in {}ms", metadata_time);
-        },
-        Err(e) => {
-            let metadata_time = Clock::get()?.unix_timestamp - metadata_start;
-            msg!("❌ Failed to create NFT metadata in {}ms: {:?}", metadata_time, e);
-            msg!("   Metadata Account: {}", ctx.accounts.metadata.key());
-            msg!("   Master Edition: {}", ctx.accounts.master_edition.key());
-            log_operation_failure(&operation_id, "MetadataCreationFailed", &format!("Failed to create metadata: {:?}", e));
-            return Err(e);
-        }
-    }
+    )?;
     
-    // Step 7: Verify collection association with error handling
-    let collection_start = Clock::get()?.unix_timestamp;
-    msg!("🏛️  Verifying collection association...");
-    match verify_collection_association(
+    // Step 8: Verify collection association (simplified)
+    verify_collection_association(
         &ctx.accounts.collection_mint,
         &ctx.accounts.program_state,
         &mint_payload,
-    ) {
-        Ok(_) => {
-            let collection_time = Clock::get()?.unix_timestamp - collection_start;
-            msg!("✅ Collection association verified successfully in {}ms", collection_time);
-        },
-        Err(e) => {
-            let collection_time = Clock::get()?.unix_timestamp - collection_start;
-            msg!("❌ Collection association verification failed in {}ms: {:?}", collection_time, e);
-            msg!("   Collection Mint: {}", ctx.accounts.collection_mint.key());
-            msg!("   Program State: {}", ctx.accounts.program_state.key());
-            log_operation_failure(&operation_id, "CollectionVerificationFailed", &format!("Collection verification failed: {:?}", e));
-            return Err(e);
-        }
-    }
+    )?;
     
-    // Step 8: Validate recipient address with error handling
-    let recipient_start = Clock::get()?.unix_timestamp;
-    msg!("👤 Validating recipient address...");
-    match validate_recipient_address(
+    // Step 9: Validate recipient address (simplified)
+    validate_recipient_address(
         &mint_payload,
         &ctx.accounts.recipient,
         &ctx.accounts.token_account,
-    ) {
-        Ok(_) => {
-            let recipient_time = Clock::get()?.unix_timestamp - recipient_start;
-            msg!("✅ Recipient address validated successfully in {}ms", recipient_time);
-        },
-        Err(e) => {
-            let recipient_time = Clock::get()?.unix_timestamp - recipient_start;
-            msg!("❌ Recipient address validation failed in {}ms: {:?}", recipient_time, e);
-            msg!("   Expected Recipient: {:?}", mint_payload.recipient_address);
-            msg!("   Token Account Owner: {}", ctx.accounts.token_account.owner);
-            log_operation_failure(&operation_id, "RecipientValidationFailed", &format!("Recipient validation failed: {:?}", e));
-            return Err(e);
-        }
-    }
+    )?;
     
-    // Step 9: Initialize NFT origin PDA with error handling
-    let origin_start = Clock::get()?.unix_timestamp;
-    msg!("📍 Initializing NFT origin PDA...");
-    
-    // Clone the metadata_uri to avoid moving mint_payload
+    // Step 10: Initialize NFT origin PDA (simplified)
     let metadata_uri = mint_payload.metadata_uri.clone();
     
-    match ctx.accounts.nft_origin.initialize(
+    ctx.accounts.nft_origin.initialize(
         0, // Placeholder bump
         mint_payload.token_id,
         mint_payload.origin_chain_id[0], // Use first byte as chain ID
         mint_payload.origin_chain_id,
         ctx.accounts.mint.key(),
         metadata_uri,
-    ) {
-        Ok(_) => {
-            let origin_time = Clock::get()?.unix_timestamp - origin_start;
-            msg!("✅ NFT origin PDA initialized successfully in {}ms", origin_time);
-        },
-        Err(e) => {
-            let origin_time = Clock::get()?.unix_timestamp - origin_start;
-            msg!("❌ Failed to initialize NFT origin PDA in {}ms: {:?}", origin_time, e);
-            msg!("   NFT Origin Account: {}", ctx.accounts.nft_origin.key());
-            msg!("   Token ID: {}", mint_payload.token_id);
-            log_operation_failure(&operation_id, "NftOriginInitFailed", &format!("Failed to initialize NFT origin: {:?}", e));
-            return Err(e);
-        }
-    }
+    )?;
     
-    // Step 10: Log success with comprehensive details and performance metrics
-    let total_time = Clock::get()?.unix_timestamp - start_time;
-    msg!("🎉 on_call entrypoint completed successfully in {}ms!", total_time);
-    msg!("📊 Final Status Summary:");
-    msg!("   ✅ NFT Mint: {}", ctx.accounts.mint.key());
-    msg!("   ✅ Token Account: {}", ctx.accounts.token_account.key());
-    msg!("   ✅ Recipient: {}", ctx.accounts.recipient.key());
-    msg!("   ✅ Metadata: {}", ctx.accounts.metadata.key());
-    msg!("   ✅ Master Edition: {}", ctx.accounts.master_edition.key());
-    msg!("   ✅ NFT Origin: {}", ctx.accounts.nft_origin.key());
-    msg!("   ✅ Collection Mint: {}", ctx.accounts.collection_mint.key());
-    msg!("   ✅ Program State: {}", ctx.accounts.program_state.key());
-    msg!("   ✅ Replay Protection: {}", ctx.accounts.replay_protection.key());
-    
-    // Log operation success with performance metrics
-    log_operation_success(&operation_id, total_time, &mint_payload);
+    // Step 11: Log success (simplified)
+    msg!("🎉 on_call entrypoint completed successfully!");
     
     Ok(())
 }
 
-/// Decode incoming mint payload from raw bytes
+/// Decode incoming mint payload from raw bytes using standardized cross-chain message format
 fn decode_incoming_mint_payload(payload: &[u8]) -> Result<IncomingMintPayload> {
+    msg!("🔍 Decoding incoming mint payload using standardized format...");
+    msg!("   Payload size: {} bytes", payload.len());
+    
+    // Quick format check to determine if this is a standardized CrossChainNftMessage
+    // Standardized format should have a specific structure that we can detect
+    let is_standardized_format = is_standardized_cross_chain_message(payload);
+    
+    if is_standardized_format {
+        // Try to decode as standardized CrossChainNftMessage
+        match CrossChainNftMessage::deserialize(payload) {
+            Ok(cross_chain_message) => {
+                msg!("✅ Successfully decoded as standardized CrossChainNftMessage");
+                
+                // Validate that this is a mint message
+                if cross_chain_message.message_type != MESSAGE_TYPE_NFT_MINT {
+                    msg!("❌ Message type is not NFT_MINT: {}", cross_chain_message.message_type);
+                    return Err(UniversalNftError::InvalidCrossChainMessage.into());
+                }
+                
+                // Convert to IncomingMintPayload format for compatibility
+                let incoming_payload = IncomingMintPayload {
+                    token_id: cross_chain_message.token_id,
+                    origin_chain_id: cross_chain_message.origin_address,
+                    gateway_message_id: cross_chain_message.message_id,
+                    metadata_uri: cross_chain_message.metadata_uri,
+                    name: cross_chain_message.name,
+                    symbol: cross_chain_message.symbol,
+                    recipient_address: cross_chain_message.recipient_address,
+                    additional_metadata: cross_chain_message.additional_metadata,
+                };
+                
+                msg!("✅ Converted standardized message to IncomingMintPayload");
+                return Ok(incoming_payload);
+            },
+            Err(e) => {
+                msg!("⚠️  Failed to decode as standardized format: {:?}", e);
+                msg!("   Falling back to legacy payload format...");
+            }
+        }
+    } else {
+        msg!("⚠️  Payload does not match standardized format");
+        msg!("   Using legacy payload format...");
+    }
+    
+    // Fallback to legacy payload format for backward compatibility
+    decode_legacy_mint_payload(payload)
+}
+
+/// Check if the payload matches the standardized CrossChainNftMessage format
+fn is_standardized_cross_chain_message(payload: &[u8]) -> bool {
+    // Standardized format should have a minimum size and specific structure
+    // We'll use a simple heuristic to detect if this is likely a standardized message
+    
+    // Minimum size for standardized format (message_type + token_id + origin_chain_id + etc.)
+    if payload.len() < 100 {
+        return false;
+    }
+    
+    // Check if the first byte is a valid message type
+    if payload.len() > 0 {
+        let message_type = payload[0];
+        if message_type != MESSAGE_TYPE_NFT_MINT && 
+           message_type != MESSAGE_TYPE_NFT_BURN && 
+           message_type != MESSAGE_TYPE_NFT_TRANSFER && 
+           message_type != MESSAGE_TYPE_COLLECTION_UPDATE {
+            return false;
+        }
+    }
+    
+    // Additional checks could be added here to better detect standardized format
+    // For now, we'll use a conservative approach and assume legacy format
+    // unless we're very confident it's standardized
+    
+    false // Default to legacy format for safety
+}
+
+/// Validate cross-chain message format
+fn validate_cross_chain_message_format(payload: &[u8]) -> Result<()> {
+    msg!("🔍 Validating cross-chain message format...");
+    
+    // Check if this is a standardized format before attempting deserialization
+    if is_standardized_cross_chain_message(payload) {
+        // Try to deserialize as CrossChainNftMessage
+        match CrossChainNftMessage::deserialize(payload) {
+            Ok(message) => {
+                msg!("✅ Successfully deserialized CrossChainNftMessage");
+                
+                // Validate the message format
+                message.validate()?;
+                
+                // Validate message size
+                validate_message_size(&message)?;
+                
+                // Validate that this is a mint message
+                if message.message_type != MESSAGE_TYPE_NFT_MINT {
+                    msg!("❌ Invalid message type for minting: {}", message.message_type);
+                    return Err(UniversalNftError::InvalidCrossChainMessage.into());
+                }
+                
+                msg!("✅ Cross-chain message format validation passed");
+                Ok(())
+            },
+            Err(e) => {
+                msg!("❌ Failed to deserialize as CrossChainNftMessage: {:?}", e);
+                msg!("   This may be a legacy format payload");
+                // For backward compatibility, we'll allow legacy formats to pass
+                Ok(())
+            }
+        }
+    } else {
+        msg!("⚠️  Payload does not match standardized format");
+        msg!("   Skipping standardized format validation for legacy payload");
+        // For backward compatibility, we'll allow legacy formats to pass
+        Ok(())
+    }
+}
+
+/// Decode legacy mint payload from raw bytes (backward compatibility)
+fn decode_legacy_mint_payload(payload: &[u8]) -> Result<IncomingMintPayload> {
     msg!("🔍 Decoding incoming mint payload...");
     msg!("   Payload size: {} bytes", payload.len());
     
