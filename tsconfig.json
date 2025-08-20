@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "rootDir": "./",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "typeRoots": ["node_modules/@types"],
+    "types": ["node", "mocha", "chai"],
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["./shared/*", "../../../shared/*"],
+      "@test/*": ["./test/*", "../../../test/*"],
+      "@contracts/*": ["./contracts/*", "../../../contracts/*"]
+    }
+  },
+  "include": [
+    "test/**/*.ts",
+    "shared/**/*.ts",
+    "scripts/**/*.ts",
+    "hardhat.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "contracts/solana/**/*"
+  ],
+  "ts-node": {
+    "files": true,
+    "experimentalSpecifierResolution": "node"
+  }
+}
