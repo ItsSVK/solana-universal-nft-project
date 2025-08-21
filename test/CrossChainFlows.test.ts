@@ -471,14 +471,21 @@ describe('Cross-Chain NFT Flows', () => {
       const messageIds = new Set<string>();
 
       // Create messages for all possible flows
-      const flows = [
+      type FlowData = {
+        from: number;
+        to: number;
+        sender: string;
+        recipient: string;
+      };
+      
+      const flows: FlowData[] = [
         { from: CHAIN_IDS.SOLANA_DEVNET, to: CHAIN_IDS.BASE_SEPOLIA, sender: charlieSol.publicKey.toString(), recipient: bobEth.address },
         { from: CHAIN_IDS.ZETACHAIN_TESTNET, to: CHAIN_IDS.SOLANA_DEVNET, sender: aliceEth.address, recipient: davidSol.publicKey.toString() },
         { from: CHAIN_IDS.BASE_SEPOLIA, to: CHAIN_IDS.SOLANA_DEVNET, sender: bobEth.address, recipient: charlieSol.publicKey.toString() },
       ];
 
       flows.forEach((flow, index) => {
-        let message: NFTTransferMessage;
+        let message: NFTTransferMessage | undefined;
 
         if (flow.from === CHAIN_IDS.SOLANA_DEVNET) {
           message = MessageBridge.createSolanaToEvmMessage({
@@ -513,6 +520,10 @@ describe('Cross-Chain NFT Flows', () => {
               nonce: (index + 1).toString(),
             });
           }
+        }
+
+        if (!message) {
+          throw new Error(`Failed to create message for flow ${index}`);
         }
 
         messages.push(message);
