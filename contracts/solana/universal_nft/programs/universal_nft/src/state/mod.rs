@@ -1,5 +1,6 @@
 pub mod program_state;
 pub mod replay_protection;
+pub mod outgoing_replay_protection;
 pub mod nft_origin;
 pub mod create_nft_origin;
 pub mod get_nft_origin;
@@ -14,6 +15,7 @@ pub mod cross_chain_message;
 
 pub use program_state::*;
 pub use replay_protection::*;
+pub use outgoing_replay_protection::*;
 pub use nft_origin::*;
 pub use create_nft_origin::*;
 pub use get_nft_origin::*;

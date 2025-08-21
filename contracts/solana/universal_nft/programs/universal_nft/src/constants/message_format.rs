@@ -258,6 +258,108 @@ pub fn encode_for_evm(message: &CrossChainNftMessage) -> Result<Vec<u8>> {
     Ok(encoded)
 }
 
+/// Construct a cross-chain message optimized for a specific destination chain
+/// 
+/// This function creates a message with chain-specific optimizations and metadata
+/// based on the destination chain type.
+pub fn construct_chain_optimized_message(
+    message_type: u8,
+    token_id: u64,
+    metadata_uri: String,
+    name: String,
+    symbol: String,
+    origin_chain_id: u8,
+    origin_address: [u8; 32],
+    recipient_address: [u8; 32],
+    destination_chain_id: u8,
+    additional_metadata: Option<Vec<u8>>,
+) -> Result<CrossChainNftMessage> {
+    // Validate chain IDs
+    require!(
+        is_chain_supported(origin_chain_id),
+        UniversalNftError::UnsupportedChainId
+    );
+    require!(
+        is_chain_supported(destination_chain_id),
+        UniversalNftError::UnsupportedChainId
+    );
+    
+    // Generate unique message ID
+    let message_id = generate_chain_specific_message_id(origin_chain_id, destination_chain_id);
+    
+    // Create base message
+    let mut message = CrossChainNftMessage {
+        message_type,
+        token_id,
+        metadata_uri,
+        name,
+        symbol,
+        origin_chain_id,
+        origin_address,
+        recipient_address,
+        timestamp: Clock::get()?.unix_timestamp,
+        message_id,
+        additional_metadata,
+    };
+    
+    // Add chain-specific optimizations
+    match destination_chain_id {
+        CHAIN_ID_SOLANA => {
+            // For Solana, ensure metadata URI is compatible with Metaplex
+            if !message.metadata_uri.starts_with("https://") && !message.metadata_uri.starts_with("http://") {
+                return Err(UniversalNftError::InvalidMetadataUri.into());
+            }
+        },
+        CHAIN_ID_BASE_SEPOLIA => {
+            // For Base Sepolia, ensure EVM compatibility
+            if message.metadata_uri.len() > MAX_METADATA_URI_LENGTH {
+                return Err(UniversalNftError::InvalidMetadataUri.into());
+            }
+        },
+        CHAIN_ID_BNB_TESTNET => {
+            // For BNB Smart Chain, ensure EVM compatibility
+            if message.metadata_uri.len() > MAX_METADATA_URI_LENGTH {
+                return Err(UniversalNftError::InvalidMetadataUri.into());
+            }
+        },
+        _ => {
+            // For other chains, apply general validation
+            require!(
+                message.metadata_uri.len() <= MAX_METADATA_URI_LENGTH,
+                UniversalNftError::InvalidMetadataUri
+            );
+        }
+    }
+    
+    // Validate the final message
+    message.validate()?;
+    
+    Ok(message)
+}
+
+/// Generate a chain-specific message ID for better replay protection
+fn generate_chain_specific_message_id(origin_chain: u8, destination_chain: u8) -> [u8; 32] {
+    let timestamp = Clock::get().unwrap().unix_timestamp;
+    let slot = Clock::get().unwrap().slot;
+    
+    let mut message_id = [0u8; 32];
+    
+    // First 8 bytes: timestamp
+    message_id[0..8].copy_from_slice(&timestamp.to_le_bytes());
+    
+    // Next 8 bytes: slot
+    message_id[8..16].copy_from_slice(&slot.to_le_bytes());
+    
+    // Next 8 bytes: chain combination
+    message_id[16..18].copy_from_slice(&origin_chain.to_le_bytes());
+    message_id[18..20].copy_from_slice(&destination_chain.to_le_bytes());
+    
+    // Remaining bytes: additional entropy
+    message_id[20..32].copy_from_slice(&[0u8; 12]);
+    
+    message_id
+}
+
 /// Decode message from EVM chain format
 /// 
 /// This function decodes the cross-chain message from EVM ABI format
