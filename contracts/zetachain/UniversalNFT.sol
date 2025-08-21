@@ -191,15 +191,12 @@ contract UniversalNFT is
 
     /**
      * @notice Handle incoming cross-chain call (from Gateway)
-     * @param context Message context
-     * @param zrc20 ZRC20 token used for the transaction
-     * @param amount Amount of tokens
      * @param message Encoded NFT transfer message
      */
     function onCall(
-        MessageContext calldata context,
-        address zrc20,
-        uint256 amount,
+        MessageContext calldata /* context */,
+        address /* zrc20 */,
+        uint256 /* amount */,
         bytes calldata message
     ) external override onlyGateway {
         CrossChainMessage.NFTTransferMessage memory nftMessage = CrossChainMessage.decode(message);
