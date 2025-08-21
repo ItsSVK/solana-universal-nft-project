@@ -228,11 +228,10 @@ contract UniversalNFTReceiver is
 
     /**
      * @notice Handle incoming cross-chain call (from Gateway)
-     * @param context Message context containing sender information
      * @param message Encoded NFT transfer message
      */
     function onCall(
-        MessageContext calldata context,
+        MessageContext calldata /* context */,
         bytes calldata message
     ) external payable onlyGateway returns (bytes4) {
         CrossChainMessage.NFTTransferMessage memory nftMessage = CrossChainMessage.decode(message);
