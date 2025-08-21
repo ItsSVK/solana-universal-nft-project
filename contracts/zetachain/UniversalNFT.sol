@@ -40,7 +40,7 @@ contract UniversalNFT is
     uint256 public constant MAX_METADATA_URI_LENGTH = 500;
 
     // State variables
-    uint256 private _tokenIdCounter;
+    uint256 internal _tokenIdCounter;
     mapping(uint256 => uint256) public tokenNonces; // tokenId => nonce for outgoing transfers
     mapping(bytes32 => bool) public processedMessages; // messageId => processed status
     mapping(uint256 => CrossChainMessage.NFTTransferMessage) public tokenOrigins; // tokenId => original mint info
@@ -198,7 +198,7 @@ contract UniversalNFT is
         address /* zrc20 */,
         uint256 /* amount */,
         bytes calldata message
-    ) external override onlyGateway {
+    ) external virtual override onlyGateway {
         CrossChainMessage.NFTTransferMessage memory nftMessage = CrossChainMessage.decode(message);
         
         // Validate message
@@ -232,7 +232,7 @@ contract UniversalNFT is
      * @notice Handle revert from cross-chain transaction
      * @param revertContext Revert context from Gateway
      */
-    function onRevert(RevertContext calldata revertContext) external onlyGateway {
+    function onRevert(RevertContext calldata revertContext) external virtual onlyGateway {
         // Log revert event for debugging
         emit RevertEvent("Cross-chain NFT transfer reverted", revertContext);
         
