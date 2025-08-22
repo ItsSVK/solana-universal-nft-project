@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { Connection, Keypair, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { expect } from 'chai';
+import hre from 'hardhat';
 
 /**
  * Test Environment Utility for Universal NFT Protocol
@@ -11,15 +12,15 @@ export interface TestConfig {
   // Network configurations
   ethRpcUrl?: string;
   solanaRpcUrl?: string;
-  
+
   // Test timeouts
   defaultTimeout?: number;
   networkTimeout?: number;
-  
+
   // Funding amounts
   ethFundingAmount?: string;
   solanaFundingAmount?: number;
-  
+
   // Contract addresses (for deployed testing)
   zetaChainNFTAddress?: string;
   baseNFTReceiverAddress?: string;
@@ -33,7 +34,7 @@ export interface TestWallets {
   bob: ethers.Wallet;
   charlie: ethers.Wallet;
   mockGateway: ethers.Wallet;
-  
+
   // Solana wallets
   aliceSol: Keypair;
   bobSol: Keypair;
@@ -74,7 +75,7 @@ export class TestEnvironment {
       networkTimeout: 10000,
       ethFundingAmount: '10.0',
       solanaFundingAmount: 10,
-      ...config
+      ...config,
     };
 
     // Initialize providers
@@ -89,14 +90,35 @@ export class TestEnvironment {
    * Create standardized test wallets
    */
   private createTestWallets(): TestWallets {
+    // Valid deterministic private keys for Ethereum (secp256k1 compatible)
+    const validPrivateKeys = {
+      deployer: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80', // Hardhat account #0
+      alice: '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690', // Hardhat account #1
+      bob: '0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365', // Hardhat account #2
+      charlie: '0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6', // Hardhat account #3
+      mockGateway: '0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926', // Hardhat account #19
+    };
+
+    // Ensure keys are properly formatted
+    const formatPrivateKey = (key: string): string => {
+      // Remove 0x prefix if present, then add it back
+      const cleanKey = key.startsWith('0x') ? key.slice(2) : key;
+      // Pad to 64 characters (32 bytes) with leading zeros
+      const paddedKey = cleanKey.padStart(64, '0');
+      return '0x' + paddedKey;
+    };
+
     return {
       // Ethereum wallets with deterministic keys for testing
-      deployer: new ethers.Wallet('0x' + '00'.repeat(32), this.ethProvider),
-      alice: new ethers.Wallet('0x' + '01'.repeat(32), this.ethProvider),
-      bob: new ethers.Wallet('0x' + '02'.repeat(32), this.ethProvider),
-      charlie: new ethers.Wallet('0x' + '03'.repeat(32), this.ethProvider),
-      mockGateway: new ethers.Wallet('0x' + '99'.repeat(32), this.ethProvider),
-      
+      deployer: new ethers.Wallet(formatPrivateKey(validPrivateKeys.deployer), this.ethProvider),
+      alice: new ethers.Wallet(formatPrivateKey(validPrivateKeys.alice), this.ethProvider),
+      bob: new ethers.Wallet(formatPrivateKey(validPrivateKeys.bob), this.ethProvider),
+      charlie: new ethers.Wallet(formatPrivateKey(validPrivateKeys.charlie), this.ethProvider),
+      mockGateway: new ethers.Wallet(
+        formatPrivateKey(validPrivateKeys.mockGateway),
+        this.ethProvider
+      ),
+
       // Solana wallets
       aliceSol: Keypair.generate(),
       bobSol: Keypair.generate(),
@@ -109,20 +131,24 @@ export class TestEnvironment {
    */
   async setup(): Promise<void> {
     console.log('🔧 Setting up test environment...');
-    
+
     // Check network connectivity
     const status = await this.checkNetworkStatus();
-    
+
     if (!status.ethereum.connected) {
       throw new Error('Ethereum network not accessible');
     }
-    
+
     if (!status.solana.connected) {
-      throw new Error('Solana network not accessible'); 
+      throw new Error('Solana network not accessible');
     }
 
-    console.log(`   ✅ Ethereum: Block ${status.ethereum.blockNumber} (Chain ${status.ethereum.chainId})`);
-    console.log(`   ✅ Solana: Slot ${status.solana.slot} (Version ${status.solana.version?.['solana-core']})`);
+    console.log(
+      `   ✅ Ethereum: Block ${status.ethereum.blockNumber} (Chain ${status.ethereum.chainId})`
+    );
+    console.log(
+      `   ✅ Solana: Slot ${status.solana.slot} (Version ${status.solana.version?.['solana-core']})`
+    );
 
     // Fund test wallets if needed
     await this.fundTestWallets();
@@ -136,7 +162,7 @@ export class TestEnvironment {
   async checkNetworkStatus(): Promise<NetworkStatus> {
     const status: NetworkStatus = {
       ethereum: { connected: false },
-      solana: { connected: false }
+      solana: { connected: false },
     };
 
     try {
@@ -165,22 +191,29 @@ export class TestEnvironment {
   async fundTestWallets(): Promise<void> {
     // Note: In real testing environments, you'd need actual funding mechanisms
     // For local testing, ensure your local networks have funded accounts
-    
+
     console.log('💰 Checking wallet funding...');
-    
+
     // Check ETH balances
-    const ethWallets = [this.wallets.deployer, this.wallets.alice, this.wallets.bob, this.wallets.charlie];
+    const ethWallets = [
+      this.wallets.deployer,
+      this.wallets.alice,
+      this.wallets.bob,
+      this.wallets.charlie,
+    ];
     for (const wallet of ethWallets) {
       const balance = await this.ethProvider.getBalance(wallet.address);
       console.log(`   ETH ${wallet.address.slice(0, 8)}...: ${ethers.formatEther(balance)} ETH`);
     }
 
-    // Check SOL balances  
+    // Check SOL balances
     const solWallets = [this.wallets.aliceSol, this.wallets.bobSol, this.wallets.charlieSol];
     for (const wallet of solWallets) {
       try {
         const balance = await this.solanaConnection.getBalance(wallet.publicKey);
-        console.log(`   SOL ${wallet.publicKey.toString().slice(0, 8)}...: ${balance / LAMPORTS_PER_SOL} SOL`);
+        console.log(
+          `   SOL ${wallet.publicKey.toString().slice(0, 8)}...: ${balance / LAMPORTS_PER_SOL} SOL`
+        );
       } catch (error) {
         console.log(`   SOL ${wallet.publicKey.toString().slice(0, 8)}...: 0 SOL (new wallet)`);
       }
@@ -194,7 +227,10 @@ export class TestEnvironment {
     console.log('📋 Deploying test contracts...');
 
     // Deploy ZetaChain Universal NFT
-    const UniversalNFTFactory = await ethers.getContractFactory('UniversalNFT', this.wallets.deployer);
+    const UniversalNFTFactory = await hre.ethers.getContractFactory(
+      'UniversalNFT',
+      this.wallets.deployer
+    );
     this.contracts.zetaChainNFT = await UniversalNFTFactory.deploy(
       this.wallets.mockGateway.address,
       this.wallets.deployer.address
@@ -202,7 +238,10 @@ export class TestEnvironment {
     await this.contracts.zetaChainNFT.waitForDeployment();
 
     // Deploy Base Sepolia NFT Receiver
-    const UniversalNFTReceiverFactory = await ethers.getContractFactory('UniversalNFTReceiver', this.wallets.deployer);
+    const UniversalNFTReceiverFactory = await hre.ethers.getContractFactory(
+      'UniversalNFTReceiver',
+      this.wallets.deployer
+    );
     this.contracts.baseNFTReceiver = await UniversalNFTReceiverFactory.deploy(
       this.wallets.mockGateway.address,
       this.wallets.deployer.address,
@@ -219,10 +258,10 @@ export class TestEnvironment {
    */
   async cleanup(): Promise<void> {
     console.log('🧹 Cleaning up test environment...');
-    
+
     // Close connections if needed
     // In most cases, connections will close automatically
-    
+
     console.log('   ✅ Cleanup complete');
   }
 
@@ -241,8 +280,8 @@ export class TestEnvironment {
       image: `https://api.universalnft.com/images/test-${params.tokenId}.png`,
       attributes: params.attributes || [
         { trait_type: 'Test', value: 'true' },
-        { trait_type: 'Token ID', value: params.tokenId }
-      ]
+        { trait_type: 'Token ID', value: params.tokenId },
+      ],
     };
 
     return `data:application/json;base64,${Buffer.from(JSON.stringify(metadata)).toString('base64')}`;
@@ -252,14 +291,14 @@ export class TestEnvironment {
    * Wait for transaction confirmation with timeout
    */
   async waitForTransaction(
-    txPromise: Promise<any>, 
+    txPromise: Promise<any>,
     timeoutMs: number = this.config.networkTimeout!
   ): Promise<any> {
     return Promise.race([
       txPromise,
-      new Promise((_, reject) => 
+      new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Transaction timeout')), timeoutMs)
-      )
+      ),
     ]);
   }
 
@@ -292,29 +331,29 @@ export class TestEnvironment {
     return {
       networks: {
         ethereum: this.config.ethRpcUrl,
-        solana: this.config.solanaRpcUrl
+        solana: this.config.solanaRpcUrl,
       },
       timeouts: {
         default: this.config.defaultTimeout,
-        network: this.config.networkTimeout
+        network: this.config.networkTimeout,
       },
       wallets: {
         ethereum: {
           deployer: this.wallets.deployer.address,
           alice: this.wallets.alice.address,
           bob: this.wallets.bob.address,
-          charlie: this.wallets.charlie.address
+          charlie: this.wallets.charlie.address,
         },
         solana: {
           alice: this.wallets.aliceSol.publicKey.toString(),
           bob: this.wallets.bobSol.publicKey.toString(),
-          charlie: this.wallets.charlieSol.publicKey.toString()
-        }
+          charlie: this.wallets.charlieSol.publicKey.toString(),
+        },
       },
       contracts: {
         zetaChainNFT: this.contracts.zetaChainNFT ? 'Deployed' : 'Not deployed',
-        baseNFTReceiver: this.contracts.baseNFTReceiver ? 'Deployed' : 'Not deployed'
-      }
+        baseNFTReceiver: this.contracts.baseNFTReceiver ? 'Deployed' : 'Not deployed',
+      },
     };
   }
 
@@ -374,8 +413,8 @@ export class TestUtils {
       description: `Random test NFT generated for testing purposes`,
       attributes: [
         { trait_type: 'Random', value: Math.random().toString() },
-        { trait_type: 'Generated', value: new Date().toISOString() }
-      ]
+        { trait_type: 'Generated', value: new Date().toISOString() },
+      ],
     };
   }
 
@@ -389,8 +428,8 @@ export class TestUtils {
       description: `Deterministic test NFT with seed ${seed}`,
       attributes: [
         { trait_type: 'Seed', value: seed },
-        { trait_type: 'Deterministic', value: 'true' }
-      ]
+        { trait_type: 'Deterministic', value: 'true' },
+      ],
     };
   }
 
@@ -410,7 +449,7 @@ export class TestUtils {
    */
   static compareNFTMetadata(metadata1: any, metadata2: any): boolean {
     if (!metadata1 || !metadata2) return false;
-    
+
     return (
       metadata1.name === metadata2.name &&
       metadata1.description === metadata2.description &&

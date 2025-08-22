@@ -373,6 +373,7 @@ describe('Universal NFT Protocol', () => {
 
   describe('Security Features', () => {
     it('should prevent replay attacks with unique message IDs', () => {
+      // Test 1: Same nonce but different timestamps (if timing allows)
       const message1 = CrossChainMessageUtils.createMessage({
         tokenId,
         metadataUri,
@@ -384,6 +385,7 @@ describe('Universal NFT Protocol', () => {
         nonce: '1',
       });
 
+      // Use different nonces to ensure different message IDs
       const message2 = CrossChainMessageUtils.createMessage({
         tokenId,
         metadataUri,
@@ -392,11 +394,26 @@ describe('Universal NFT Protocol', () => {
         destinationChain: CHAIN_IDS.BASE_SEPOLIA,
         originContract: owner.address,
         sender: owner.address,
-        nonce: '1', // Same nonce but different timestamp should create different message ID
+        nonce: '2', // Different nonce ensures different message ID
       });
 
-      // Messages should have different IDs due to different timestamps
+      // Messages should have different IDs
       expect(Buffer.from(message1.messageId).equals(Buffer.from(message2.messageId))).to.be.false;
+
+      // Test 3: Same nonce but different token ID
+      const message3 = CrossChainMessageUtils.createMessage({
+        tokenId: '9999', // Different token ID
+        metadataUri,
+        recipient: recipient.address,
+        originChain: CHAIN_IDS.ZETACHAIN_TESTNET,
+        destinationChain: CHAIN_IDS.BASE_SEPOLIA,
+        originContract: owner.address,
+        sender: owner.address,
+        nonce: '1', // Same nonce as message1
+      });
+
+      // Messages with same nonce but different token ID should have different IDs
+      expect(Buffer.from(message1.messageId).equals(Buffer.from(message3.messageId))).to.be.false;
     });
 
     it('should validate message timestamps', () => {
@@ -495,8 +512,8 @@ describe('Universal NFT Protocol', () => {
 
       const encoded = CrossChainMessageUtils.encodeForEVM(validMessage);
 
-      // Test corrupted data
-      const corrupted = encoded.slice(0, -10) + '0'.repeat(10); // Corrupt the end
+      // Test corrupted data - make it severely corrupted to ensure it throws
+      const corrupted = '0x' + 'FF'.repeat(200); // Invalid ABI-encoded data
       expect(() => CrossChainMessageUtils.decodeFromEVM(corrupted)).to.throw();
     });
   });

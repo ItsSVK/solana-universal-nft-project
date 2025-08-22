@@ -1,0 +1,2239 @@
+{
+  "address": "AkcS5k7wDCVddJW2VexMV8MSGXYS9UYW5KXvkk47LZaQ",
+  "metadata": {
+    "name": "universal_nft",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Universal NFT program for cross-chain NFT transfers"
+  },
+  "instructions": [
+    {
+      "name": "burn_nft_and_transfer",
+      "discriminator": [
+        40,
+        148,
+        73,
+        85,
+        85,
+        100,
+        223,
+        65
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "docs": [
+            "The owner of the NFT (must be a signer)"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "The NFT mint account to be burned"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_account",
+          "docs": [
+            "The owner's token account containing the NFT"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "metadata",
+          "docs": [
+            "The NFT's metadata account"
+          ]
+        },
+        {
+          "name": "master_edition",
+          "docs": [
+            "The NFT's master edition account"
+          ]
+        },
+        {
+          "name": "collection_mint",
+          "docs": [
+            "The collection mint account"
+          ]
+        },
+        {
+          "name": "collection_metadata",
+          "docs": [
+            "The collection metadata account"
+          ]
+        },
+        {
+          "name": "collection_master_edition",
+          "docs": [
+            "The collection master edition account"
+          ]
+        },
+        {
+          "name": "gateway_program",
+          "docs": [
+            "The ZetaChain Gateway program"
+          ]
+        },
+        {
+          "name": "gateway_state",
+          "docs": [
+            "The Gateway state account"
+          ]
+        },
+        {
+          "name": "gateway_custody",
+          "docs": [
+            "The Gateway custody token account (ZETA tokens for fees)"
+          ]
+        },
+        {
+          "name": "tss_account",
+          "docs": [
+            "The TSS (Threshold Signature Scheme) account"
+          ]
+        },
+        {
+          "name": "owner_zeta_account",
+          "docs": [
+            "The owner's ZETA token account for Gateway fees"
+          ]
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "The system program"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "The token program"
+          ],
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "docs": [
+            "The associated token program"
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "rent",
+          "docs": [
+            "The rent sysvar"
+          ],
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "BurnNftAndTransferParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "check_and_mark_message",
+      "discriminator": [
+        237,
+        35,
+        191,
+        104,
+        142,
+        248,
+        232,
+        128
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "replay_protection",
+          "docs": [
+            "The replay protection PDA to check and mark"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  112,
+                  108,
+                  97,
+                  121
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "chain_id"
+              },
+              {
+                "kind": "arg",
+                "path": "gateway_message_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "The system program for account creation"
+          ],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "chain_id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "gateway_message_id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "check_and_mark_message_with_metadata",
+      "discriminator": [
+        71,
+        168,
+        106,
+        151,
+        106,
+        137,
+        254,
+        135
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "replay_protection",
+          "docs": [
+            "The replay protection PDA to check and mark"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  112,
+                  108,
+                  97,
+                  121
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "chain_id"
+              },
+              {
+                "kind": "arg",
+                "path": "gateway_message_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "The system program for account creation"
+          ],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "chain_id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "gateway_message_id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "option": {
+              "defined": {
+                "name": "ReplayProtectionMetadata"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "close_nft_origin",
+      "discriminator": [
+        18,
+        40,
+        102,
+        122,
+        164,
+        67,
+        119,
+        97
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "nft_origin",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "close_program_state",
+      "discriminator": [
+        71,
+        153,
+        195,
+        5,
+        141,
+        244,
+        200,
+        84
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program_state",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "close_replay_protection",
+      "discriminator": [
+        240,
+        24,
+        124,
+        239,
+        136,
+        88,
+        72,
+        163
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "replay_protection",
+          "docs": [
+            "The replay protection account to close"
+          ],
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_nft_origin",
+      "discriminator": [
+        109,
+        120,
+        239,
+        236,
+        12,
+        217,
+        48,
+        209
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "nft_origin",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  110,
+                  102,
+                  116,
+                  95,
+                  111,
+                  114,
+                  105,
+                  103,
+                  105,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "token_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "program_state",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "token_id",
+          "type": "u64"
+        },
+        {
+          "name": "origin_chain",
+          "type": "u8"
+        },
+        {
+          "name": "origin_address",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "mint_address",
+          "type": "pubkey"
+        },
+        {
+          "name": "metadata_uri",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "get_nft_origin",
+      "discriminator": [
+        244,
+        80,
+        40,
+        146,
+        251,
+        107,
+        27,
+        20
+      ],
+      "accounts": [
+        {
+          "name": "nft_origin",
+          "docs": [
+            "The NFT origin account to fetch"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  110,
+                  102,
+                  116,
+                  95,
+                  111,
+                  114,
+                  105,
+                  103,
+                  105,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "token_id"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "token_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initialize_program_state",
+      "discriminator": [
+        114,
+        90,
+        170,
+        208,
+        223,
+        41,
+        40,
+        160
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  45,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "mint_collection",
+      "discriminator": [
+        137,
+        138,
+        109,
+        239,
+        203,
+        207,
+        225,
+        67
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program_state",
+          "docs": [
+            "The program state account to update with collection mint"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  45,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "collection_mint",
+          "docs": [
+            "The mint account for the Collection NFT"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "authority_token_account",
+          "docs": [
+            "The authority's token account for the Collection NFT"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "collection_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "The Token program for minting operations"
+          ],
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "docs": [
+            "The Associated Token Account program"
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "The System program for account creation"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "docs": [
+            "The Rent sysvar"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "symbol",
+          "type": "string"
+        },
+        {
+          "name": "uri",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "mint_nft",
+      "discriminator": [
+        211,
+        57,
+        6,
+        167,
+        15,
+        219,
+        35,
+        251
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "docs": [
+            "The account paying for the transaction"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "The mint account for the NFT"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_account",
+          "docs": [
+            "The token account that will hold the minted NFT"
+          ],
+          "writable": true
+        },
+        {
+          "name": "program_state",
+          "docs": [
+            "The program state account"
+          ]
+        },
+        {
+          "name": "replay_protection",
+          "docs": [
+            "The replay protection account (PDA) for Gateway message ID"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  116,
+                  101,
+                  119,
+                  97,
+                  121,
+                  95,
+                  114,
+                  101,
+                  112,
+                  108,
+                  97,
+                  121,
+                  95,
+                  112,
+                  114,
+                  111,
+                  116,
+                  101,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "chain_id"
+              },
+              {
+                "kind": "arg",
+                "path": "gateway_message_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "The system program"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "The token program"
+          ],
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "docs": [
+            "The associated token program"
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "rent",
+          "docs": [
+            "The rent sysvar"
+          ],
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "_chain_id",
+          "type": "u8"
+        },
+        {
+          "name": "_gateway_message_id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "CrossChainMintParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "on_call",
+      "docs": [
+        "ZetaChain Gateway on_call entrypoint for incoming cross-chain NFT minting",
+        "",
+        "This instruction is called by the Gateway when a cross-chain message is received.",
+        "It implements the full validation pipeline and NFT minting process."
+      ],
+      "discriminator": [
+        16,
+        136,
+        66,
+        32,
+        254,
+        40,
+        181,
+        8
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "docs": [
+            "The account paying for the transaction (usually the Gateway)"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "The mint account for the NFT (will be created)"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_account",
+          "docs": [
+            "The token account that will hold the minted NFT"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "recipient"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "recipient",
+          "docs": [
+            "The recipient of the minted NFT"
+          ]
+        },
+        {
+          "name": "program_state",
+          "docs": [
+            "The program state account"
+          ]
+        },
+        {
+          "name": "collection_mint",
+          "docs": [
+            "The collection mint account (must be verified)"
+          ]
+        },
+        {
+          "name": "collection_metadata",
+          "docs": [
+            "The collection metadata account"
+          ]
+        },
+        {
+          "name": "collection_master_edition",
+          "docs": [
+            "The collection master edition account"
+          ]
+        },
+        {
+          "name": "metadata",
+          "docs": [
+            "The NFT metadata account (will be created)"
+          ]
+        },
+        {
+          "name": "master_edition",
+          "docs": [
+            "The NFT master edition account (will be created)"
+          ]
+        },
+        {
+          "name": "nft_origin",
+          "docs": [
+            "The NFT origin PDA account (will be created)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "nft_origin_by_token_id",
+          "docs": [
+            "The NFT origin by token ID PDA for efficient lookups"
+          ],
+          "writable": true
+        },
+        {
+          "name": "replay_protection",
+          "docs": [
+            "The replay protection account (PDA) for Gateway message ID"
+          ],
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "The system program"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "The token program"
+          ],
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "docs": [
+            "The associated token program"
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "rent",
+          "docs": [
+            "The rent sysvar"
+          ],
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "instructions_sysvar",
+          "docs": [
+            "The instructions sysvar for Gateway validation"
+          ],
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "payload",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "on_revert",
+      "docs": [
+        "ZetaChain Gateway on_revert entrypoint for handling failed cross-chain transfers",
+        "",
+        "This instruction is called by the Gateway when a cross-chain transfer fails.",
+        "It logs the revert information for debugging and monitoring purposes.",
+        "For NFTs, this is a no-op since failed transfers don't create state on the destination chain."
+      ],
+      "discriminator": [
+        226,
+        44,
+        101,
+        52,
+        224,
+        214,
+        41,
+        9
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "docs": [
+            "The account paying for the transaction (usually the Gateway)"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "gateway_program",
+          "docs": [
+            "The ZetaChain Gateway program that is calling this instruction"
+          ]
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "The System program for account operations"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "instructions_sysvar",
+          "docs": [
+            "The instructions sysvar for Gateway validation"
+          ],
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "sender",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "message",
+          "type": "bytes"
+        },
+        {
+          "name": "reason",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "verify_collection",
+      "discriminator": [
+        56,
+        113,
+        101,
+        253,
+        79,
+        55,
+        122,
+        169
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "The authority that can verify the collection"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program_state",
+          "docs": [
+            "The program state account containing collection information"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  45,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "collection_mint",
+          "docs": [
+            "The Collection NFT mint account"
+          ],
+          "writable": true
+        },
+        {
+          "name": "authority_token_account",
+          "docs": [
+            "The authority's token account for the Collection NFT"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "collection_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "The Token program"
+          ],
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "docs": [
+            "The Associated Token Account program"
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "The System program"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "docs": [
+            "The Rent sysvar"
+          ]
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "NftOrigin",
+      "discriminator": [
+        190,
+        248,
+        47,
+        131,
+        75,
+        149,
+        160,
+        157
+      ]
+    },
+    {
+      "name": "NftOriginByTokenId",
+      "discriminator": [
+        247,
+        109,
+        18,
+        172,
+        35,
+        156,
+        173,
+        86
+      ]
+    },
+    {
+      "name": "ProgramState",
+      "discriminator": [
+        77,
+        209,
+        137,
+        229,
+        149,
+        67,
+        167,
+        230
+      ]
+    },
+    {
+      "name": "ReplayProtection",
+      "discriminator": [
+        227,
+        67,
+        45,
+        119,
+        197,
+        66,
+        103,
+        28
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidProgramState",
+      "msg": "Invalid program state"
+    },
+    {
+      "code": 6001,
+      "name": "ProgramStateAlreadyInitialized",
+      "msg": "Program state already initialized"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidNftOriginData",
+      "msg": "Invalid NFT origin data"
+    },
+    {
+      "code": 6003,
+      "name": "MessageAlreadyProcessed",
+      "msg": "Message already processed"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidNftMint",
+      "msg": "Invalid NFT mint - must have 0 decimals and supply of 1"
+    },
+    {
+      "code": 6005,
+      "name": "Unauthorized",
+      "msg": "Unauthorized operation"
+    },
+    {
+      "code": 6006,
+      "name": "TokenMintMismatch",
+      "msg": "Token mint mismatch"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidTokenAmount",
+      "msg": "Invalid token amount - must be exactly 1 for NFTs"
+    },
+    {
+      "code": 6008,
+      "name": "MintAddressMismatch",
+      "msg": "Mint address mismatch with NFT origin"
+    },
+    {
+      "code": 6009,
+      "name": "InvalidDestinationChain",
+      "msg": "Invalid destination chain"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidRecipientAddress",
+      "msg": "Invalid recipient address"
+    },
+    {
+      "code": 6011,
+      "name": "GatewayCallFailed",
+      "msg": "Gateway call failed"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidCrossChainPayload",
+      "msg": "Invalid cross-chain payload"
+    },
+    {
+      "code": 6013,
+      "name": "InvalidCollectionData",
+      "msg": "Invalid collection data - name, symbol, or URI is invalid"
+    },
+    {
+      "code": 6014,
+      "name": "CollectionAlreadyMinted",
+      "msg": "Collection NFT already minted"
+    },
+    {
+      "code": 6015,
+      "name": "UnsupportedChainId",
+      "msg": "Unsupported chain ID"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidChainIdFormat",
+      "msg": "Invalid chain ID format"
+    },
+    {
+      "code": 6017,
+      "name": "CollectionNotMinted",
+      "msg": "Collection not minted yet"
+    },
+    {
+      "code": 6018,
+      "name": "CollectionVerificationFailed",
+      "msg": "Collection verification failed"
+    },
+    {
+      "code": 6019,
+      "name": "CollectionNotVerified",
+      "msg": "Collection not verified yet"
+    },
+    {
+      "code": 6020,
+      "name": "CollectionAssignmentFailed",
+      "msg": "Collection assignment failed"
+    },
+    {
+      "code": 6021,
+      "name": "PayloadTooSmall",
+      "msg": "Payload size is too small"
+    },
+    {
+      "code": 6022,
+      "name": "PayloadTooLarge",
+      "msg": "Payload size is too large"
+    },
+    {
+      "code": 6023,
+      "name": "InvalidPayloadBounds",
+      "msg": "Invalid payload bounds - min must be <= max and within global limits"
+    },
+    {
+      "code": 6024,
+      "name": "InvalidSignature",
+      "msg": "Invalid signature - signature verification failed"
+    },
+    {
+      "code": 6025,
+      "name": "InsufficientSignatures",
+      "msg": "Insufficient signatures - not enough valid signatures provided"
+    },
+    {
+      "code": 6026,
+      "name": "UnauthorizedValidator",
+      "msg": "Unauthorized validator - signer is not an authorized validator"
+    },
+    {
+      "code": 6027,
+      "name": "InvalidSignatureThreshold",
+      "msg": "Invalid signature threshold - threshold calculation failed"
+    },
+    {
+      "code": 6028,
+      "name": "InvalidValidatorData",
+      "msg": "Invalid validator data - validator information is invalid"
+    },
+    {
+      "code": 6029,
+      "name": "TooManyValidators",
+      "msg": "Too many validators - maximum validator limit exceeded"
+    },
+    {
+      "code": 6030,
+      "name": "UnauthorizedGateway",
+      "msg": "Unauthorized gateway - caller is not an authorized gateway"
+    },
+    {
+      "code": 6031,
+      "name": "GatewayNotActive",
+      "msg": "Gateway not active - gateway is authorized but not currently active"
+    },
+    {
+      "code": 6032,
+      "name": "InvalidGatewayData",
+      "msg": "Invalid gateway data - gateway information is invalid"
+    },
+    {
+      "code": 6033,
+      "name": "TooManyGateways",
+      "msg": "Too many gateways - maximum gateway limit exceeded"
+    },
+    {
+      "code": 6034,
+      "name": "InvalidCrossChainMessage",
+      "msg": "Invalid cross-chain message - validation pipeline failed"
+    },
+    {
+      "code": 6035,
+      "name": "InvalidPayload",
+      "msg": "Invalid payload - payload validation failed"
+    },
+    {
+      "code": 6036,
+      "name": "InvalidMessageType",
+      "msg": "Invalid message type - must be 1-4"
+    },
+    {
+      "code": 6037,
+      "name": "InvalidTokenId",
+      "msg": "Invalid token ID - must be greater than 0"
+    },
+    {
+      "code": 6038,
+      "name": "InvalidMetadataUri",
+      "msg": "Invalid metadata URI - cannot be empty"
+    },
+    {
+      "code": 6039,
+      "name": "InvalidNftName",
+      "msg": "Invalid NFT name - cannot be empty"
+    },
+    {
+      "code": 6040,
+      "name": "InvalidNftSymbol",
+      "msg": "Invalid NFT symbol - cannot be empty"
+    },
+    {
+      "code": 6041,
+      "name": "MessageTooOld",
+      "msg": "Message too old - timestamp exceeds maximum age"
+    },
+    {
+      "code": 6042,
+      "name": "MessageTooLarge",
+      "msg": "Message too large - exceeds maximum size limit"
+    },
+    {
+      "code": 6043,
+      "name": "MessageTooSmall",
+      "msg": "Message too small - below minimum size limit"
+    },
+    {
+      "code": 6044,
+      "name": "SerializationError",
+      "msg": "Serialization error - failed to serialize message"
+    },
+    {
+      "code": 6045,
+      "name": "DeserializationError",
+      "msg": "Deserialization error - failed to deserialize message"
+    }
+  ],
+  "types": [
+    {
+      "name": "AuthorizedGateway",
+      "docs": [
+        "Gateway information structure"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "public_key",
+            "docs": [
+              "The gateway's public key"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "is_active",
+            "docs": [
+              "Whether the gateway is currently active"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "network_id",
+            "docs": [
+              "The gateway's network/chain identifier"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "authorized_at",
+            "docs": [
+              "Timestamp when the gateway was authorized"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "description",
+            "docs": [
+              "Optional description of the gateway"
+            ],
+            "type": {
+              "option": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "BurnNftAndTransferParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "destination_chain",
+            "docs": [
+              "Destination chain ID for the cross-chain transfer"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "destination_address",
+            "docs": [
+              "Recipient address on the destination chain (32 bytes for cross-chain compatibility)"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "metadata_uri",
+            "docs": [
+              "Optional metadata URI for the destination chain"
+            ],
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "name",
+            "docs": [
+              "Optional NFT name for the destination chain"
+            ],
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "symbol",
+            "docs": [
+              "Optional NFT symbol for the destination chain"
+            ],
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "additional_metadata",
+            "docs": [
+              "Optional additional metadata for the destination chain"
+            ],
+            "type": {
+              "option": "bytes"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CrossChainMintParams",
+      "docs": [
+        "Cross-chain NFT mint instruction parameters for Gateway integration"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "source_chain_id",
+            "docs": [
+              "Source chain ID"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "destination_chain_id",
+            "docs": [
+              "Destination chain ID (should be Solana)"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "gateway_message_id",
+            "docs": [
+              "ZetaChain Gateway message ID for replay protection"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "payload",
+            "docs": [
+              "Message payload containing NFT metadata"
+            ],
+            "type": "bytes"
+          },
+          {
+            "name": "signatures",
+            "docs": [
+              "Message signatures from validators"
+            ],
+            "type": {
+              "vec": "bytes"
+            }
+          },
+          {
+            "name": "validators",
+            "docs": [
+              "Validator public keys"
+            ],
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "timestamp",
+            "docs": [
+              "Message timestamp"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "metadata",
+            "docs": [
+              "Optional metadata for enhanced tracking"
+            ],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "ReplayProtectionMetadata"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "NftOrigin",
+      "docs": [
+        "NFT Origin account storing cross-chain origin data"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for the PDA"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "token_id",
+            "docs": [
+              "Token ID from the source chain"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "origin_chain",
+            "docs": [
+              "Origin chain ID"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "origin_address",
+            "docs": [
+              "Origin address (32 bytes)"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "mint_address",
+            "docs": [
+              "Mint address on Solana"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "created_at",
+            "docs": [
+              "Timestamp when created"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "metadata_uri",
+            "docs": [
+              "Metadata URI"
+            ],
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "NftOriginByTokenId",
+      "docs": [
+        "NFT Origin by Token ID mapping for efficient lookups",
+        "This PDA maps token_id to mint_address for quick existence checks"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for the PDA"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "token_id",
+            "docs": [
+              "Token ID from the source chain (used as seed)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "mint_address",
+            "docs": [
+              "Mint address on Solana"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "created_at",
+            "docs": [
+              "Timestamp when created"
+            ],
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProgramState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "next_token_id",
+            "type": "u64"
+          },
+          {
+            "name": "collection_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "collection_verified",
+            "type": "bool"
+          },
+          {
+            "name": "authorized_gateways",
+            "docs": [
+              "List of authorized gateways that can call cross-chain instructions"
+            ],
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "AuthorizedGateway"
+                }
+              }
+            }
+          },
+          {
+            "name": "zeta_chain_gateway_program_id",
+            "docs": [
+              "ZetaChain Gateway program ID for validation"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "gateway_integration_active",
+            "docs": [
+              "Whether Gateway integration is currently active"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "gateway_last_updated",
+            "docs": [
+              "Timestamp when Gateway integration was last updated"
+            ],
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ReplayProtection",
+      "docs": [
+        "Replay Protection account to prevent duplicate cross-chain message processing",
+        "",
+        "This account stores information about processed cross-chain messages to prevent",
+        "replay attacks. Each incoming message must be checked against this PDA before",
+        "any state changes occur.",
+        "",
+        "Updated to use ZetaChain Gateway message IDs for enhanced security and",
+        "compatibility with the Gateway system."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for the PDA"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "processed_at",
+            "docs": [
+              "Unix timestamp when the message was processed"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "chain_id",
+            "docs": [
+              "Chain ID where the message originated (32 bytes for future extensibility)"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "gateway_message_id",
+            "docs": [
+              "ZetaChain Gateway message ID for uniqueness verification",
+              "This replaces the custom message_hash with the official Gateway identifier"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "metadata",
+            "docs": [
+              "Optional additional metadata for debugging and monitoring"
+            ],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "ReplayProtectionMetadata"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ReplayProtectionMetadata",
+      "docs": [
+        "Additional metadata for replay protection accounts"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "source_chain_name",
+            "docs": [
+              "The source chain identifier (e.g., \"ethereum\", \"polygon\")"
+            ],
+            "type": "string"
+          },
+          {
+            "name": "destination_chain_name",
+            "docs": [
+              "The destination chain identifier"
+            ],
+            "type": "string"
+          },
+          {
+            "name": "token_id",
+            "docs": [
+              "The token ID being transferred"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "recipient_address",
+            "docs": [
+              "The recipient address on the destination chain"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "context",
+            "docs": [
+              "Additional context about the message"
+            ],
+            "type": "string"
+          }
+        ]
+      }
+    }
+  ]
+}

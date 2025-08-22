@@ -52,20 +52,18 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
 
       // Try to mint from unauthorized account
       const unauthorizedWallet = testEnv.wallets.bob;
-      
+
       try {
         // This should fail if proper access controls are in place
-        await zetaChainNFT.connect(unauthorizedWallet).mint(
-          unauthorizedWallet.address,
-          'https://malicious.com/nft.json'
-        );
-        
+        await zetaChainNFT
+          .connect(unauthorizedWallet)
+          .mint(unauthorizedWallet.address, 'https://malicious.com/nft.json');
+
         console.log('   ❌ SECURITY VULNERABILITY: Unauthorized minting succeeded!');
         securityMetrics.vulnerabilitiesFound.push('Unauthorized minting allowed');
-        
+
         // If unauthorized minting succeeds, we have a serious security issue
         expect.fail('Unauthorized minting should not be allowed');
-        
       } catch (error: any) {
         console.log('   ✅ Unauthorized minting correctly blocked');
         console.log(`     🔒 Error: ${error.message.slice(0, 100)}...`);
@@ -98,11 +96,10 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
         await baseNFTReceiver
           .connect(testEnv.wallets.bob) // Bob is not the gateway!
           .onCall({ sender: '0x' + '00'.repeat(20) }, encodedMessage);
-        
+
         console.log('   ❌ SECURITY VULNERABILITY: Unauthorized message processing succeeded!');
         securityMetrics.vulnerabilitiesFound.push('Unauthorized message processing allowed');
         expect.fail('Unauthorized message processing should not be allowed');
-        
       } catch (error: any) {
         console.log('   ✅ Unauthorized message processing correctly blocked');
         console.log(`     🔒 Error: ${error.message.slice(0, 100)}...`);
@@ -136,11 +133,10 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
         await baseNFTReceiver
           .connect(fakeGateway)
           .onCall({ sender: await zetaChainNFT.getAddress() }, encodedMessage);
-        
+
         console.log('   ❌ SECURITY VULNERABILITY: Fake gateway accepted!');
         securityMetrics.vulnerabilitiesFound.push('Fake gateway accepted');
         expect.fail('Fake gateway should not be accepted');
-        
       } catch (error: any) {
         console.log('   ✅ Fake gateway correctly rejected');
         securityMetrics.attacksBlocked++;
@@ -192,11 +188,10 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
         await baseNFTReceiver
           .connect(testEnv.wallets.mockGateway)
           .onCall(mockContext, encodedMessage);
-        
+
         console.log('   ❌ SECURITY VULNERABILITY: Replay attack succeeded!');
         securityMetrics.vulnerabilitiesFound.push('Message replay attack allowed');
         expect.fail('Message replay should not be allowed');
-        
       } catch (error: any) {
         console.log('   ✅ Replay attack correctly prevented');
         console.log(`     🔒 Error: ${error.message.slice(0, 100)}...`);
@@ -241,11 +236,13 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
       const messageId2 = Buffer.from(message2.messageId).toString('hex');
 
       expect(messageId1).to.not.equal(messageId2);
-      console.log(`   ✅ Different message IDs generated: ${messageId1.slice(0, 16)}... vs ${messageId2.slice(0, 16)}...`);
+      console.log(
+        `   ✅ Different message IDs generated: ${messageId1.slice(0, 16)}... vs ${messageId2.slice(0, 16)}...`
+      );
 
       // Both should be processable as they have different IDs
       const mockContext = { sender: zetaAddress };
-      
+
       const tx1 = await baseNFTReceiver
         .connect(testEnv.wallets.mockGateway)
         .onCall(mockContext, CrossChainMessageUtils.encodeForEVM(message1));
@@ -266,6 +263,9 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
       this.timeout(45000);
       console.log('🧪 Testing malformed message rejection...');
 
+      // Get the contract address once
+      const zetaAddress = await zetaChainNFT.getAddress();
+
       const malformedTests = [
         {
           name: 'Empty metadata URI',
@@ -277,7 +277,7 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
             destinationChain: CHAIN_IDS.BASE_SEPOLIA,
             messageId: new Uint8Array(32).fill(1),
             timestamp: Math.floor(Date.now() / 1000),
-            originContract: CrossChainMessageUtils.ethereumAddressToBytes32(await zetaChainNFT.getAddress()),
+            originContract: CrossChainMessageUtils.ethereumAddressToBytes32(zetaAddress),
             nonce: 'malformed_1',
           }),
         },
@@ -291,7 +291,7 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
             destinationChain: CHAIN_IDS.BASE_SEPOLIA,
             messageId: new Uint8Array(32).fill(2),
             timestamp: Math.floor(Date.now() / 1000) - 100000, // Very old timestamp
-            originContract: CrossChainMessageUtils.ethereumAddressToBytes32(await zetaChainNFT.getAddress()),
+            originContract: CrossChainMessageUtils.ethereumAddressToBytes32(zetaAddress),
             nonce: 'malformed_2',
           }),
         },
@@ -305,7 +305,7 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
             destinationChain: CHAIN_IDS.ZETACHAIN_TESTNET, // Same as origin!
             messageId: new Uint8Array(32).fill(3),
             timestamp: Math.floor(Date.now() / 1000),
-            originContract: CrossChainMessageUtils.ethereumAddressToBytes32(await zetaChainNFT.getAddress()),
+            originContract: CrossChainMessageUtils.ethereumAddressToBytes32(zetaAddress),
             nonce: 'malformed_3',
           }),
         },
@@ -318,10 +318,9 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
         try {
           const malformedMessage = test.getMessage() as NFTTransferMessage;
           CrossChainMessageUtils.validateMessage(malformedMessage);
-          
+
           console.log(`     ❌ VULNERABILITY: ${test.name} was accepted!`);
           securityMetrics.vulnerabilitiesFound.push(`Malformed message accepted: ${test.name}`);
-          
         } catch (error: any) {
           console.log(`     ✅ ${test.name} correctly rejected: ${error.message.slice(0, 50)}...`);
           securityMetrics.attacksBlocked++;
@@ -382,13 +381,16 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
             console.log(`     ✅ ${input.name} handled appropriately`);
             securityMetrics.attacksBlocked++;
           }
-
         } catch (error: any) {
           if (input.shouldFail) {
-            console.log(`     ✅ ${input.name} correctly rejected: ${error.message.slice(0, 50)}...`);
+            console.log(
+              `     ✅ ${input.name} correctly rejected: ${error.message.slice(0, 50)}...`
+            );
             securityMetrics.attacksBlocked++;
           } else {
-            console.log(`     ⚠️  ${input.name} rejected unexpectedly: ${error.message.slice(0, 50)}...`);
+            console.log(
+              `     ⚠️  ${input.name} rejected unexpectedly: ${error.message.slice(0, 50)}...`
+            );
           }
         }
       }
@@ -417,7 +419,7 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
 
         // Check if gas usage is within reasonable limits
         const MAX_REASONABLE_GAS = 500000n;
-        
+
         if (gasEstimate > MAX_REASONABLE_GAS) {
           console.log(`   ⚠️  High gas usage detected: ${gasEstimate.toString()}`);
           console.log('   🔒 Gas limits should prevent abuse in production');
@@ -430,9 +432,8 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
         // Actually perform the operation to verify it works
         const tx = await zetaChainNFT.mint(testEnv.wallets.alice.address, expensiveUri);
         const receipt = await tx.wait();
-        
-        console.log(`   📊 Actual gas used: ${receipt!.gasUsed.toString()}`);
 
+        console.log(`   📊 Actual gas used: ${receipt!.gasUsed.toString()}`);
       } catch (error: any) {
         console.log(`   🔒 Expensive operation blocked: ${error.message.slice(0, 100)}...`);
         securityMetrics.attacksBlocked++;
@@ -454,18 +455,17 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
       console.log(`   🔥 Attempting ${rapidOpsCount} rapid operations...`);
 
       for (let i = 0; i < rapidOpsCount; i++) {
-        const op = zetaChainNFT.mint(
-          testEnv.wallets.alice.address,
-          `https://rapid.test.com/${i}.json`
-        ).then(tx => tx.wait())
-        .then(() => {
-          successCount++;
-        })
-        .catch((error: any) => {
-          errorCount++;
-          // Rate limiting or resource protection kicked in
-          console.log(`     🛡️  Operation ${i} blocked: ${error.message.slice(0, 50)}...`);
-        });
+        const op = zetaChainNFT
+          .mint(testEnv.wallets.alice.address, `https://rapid.test.com/${i}.json`)
+          .then((tx) => tx.wait())
+          .then(() => {
+            successCount++;
+          })
+          .catch((error: any) => {
+            errorCount++;
+            // Rate limiting or resource protection kicked in
+            console.log(`     🛡️  Operation ${i} blocked: ${error.message.slice(0, 50)}...`);
+          });
 
         rapidOps.push(op);
       }
@@ -507,28 +507,27 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
 
       for (const test of networkTests) {
         console.log(`   🕐 Testing: ${test.name}`);
-        
+
         try {
           const startTime = Date.now();
-          
+
           // Add artificial delay to simulate slow network
-          await new Promise(resolve => setTimeout(resolve, test.delay));
-          
+          await new Promise((resolve) => setTimeout(resolve, test.delay));
+
           // Perform operation
           const tx = await zetaChainNFT.mint(
             testEnv.wallets.alice.address,
             `https://network.test.com/${test.name.replace(/\s+/g, '_')}.json`
           );
           await tx.wait();
-          
+
           const endTime = Date.now();
           const totalTime = endTime - startTime;
-          
+
           console.log(`     ✅ ${test.name} completed in ${totalTime}ms`);
-          
+
           // Operation should still succeed despite delays
           expect(totalTime).to.be.greaterThan(test.delay);
-
         } catch (error: any) {
           console.log(`     ❌ ${test.name} failed: ${error.message}`);
           securityMetrics.robustnessFailures++;
@@ -544,7 +543,7 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
 
       // Test contract pause/unpause scenarios
       console.log('   🛑 Testing contract pause handling...');
-      
+
       try {
         // Pause the contract
         await baseNFTReceiver.pause();
@@ -570,10 +569,9 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
               { sender: await zetaChainNFT.getAddress() },
               CrossChainMessageUtils.encodeForEVM(pausedMessage)
             );
-          
+
           console.log('     ❌ Operations succeeded while paused - potential issue');
           securityMetrics.robustnessFailures++;
-          
         } catch (pauseError: any) {
           console.log('     ✅ Operations correctly blocked while paused');
         }
@@ -591,9 +589,8 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
             CrossChainMessageUtils.encodeForEVM(pausedMessage)
           );
         await unpausedTx.wait();
-        
-        console.log('     ✅ Operations work correctly after unpause');
 
+        console.log('     ✅ Operations work correctly after unpause');
       } catch (error: any) {
         console.log(`     ❌ Pause/unpause test failed: ${error.message}`);
         securityMetrics.robustnessFailures++;
@@ -636,13 +633,9 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
         try {
           const tx = await baseNFTReceiver
             .connect(testEnv.wallets.mockGateway)
-            .onCall(
-              { sender: zetaAddress },
-              CrossChainMessageUtils.encodeForEVM(message)
-            );
+            .onCall({ sender: zetaAddress }, CrossChainMessageUtils.encodeForEVM(message));
           await tx.wait();
           processedCount++;
-
         } catch (error: any) {
           console.log(`     ⚠️  Message processing failed: ${error.message.slice(0, 50)}...`);
           // Some failures might be acceptable (duplicate processing, etc.)
@@ -659,7 +652,9 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
         }
       }
 
-      console.log(`   ✅ ${markedProcessed}/${messageCount} messages correctly marked as processed`);
+      console.log(
+        `   ✅ ${markedProcessed}/${messageCount} messages correctly marked as processed`
+      );
 
       if (processedCount < messageCount * 0.8) {
         console.log('   ⚠️  Low success rate - might indicate ordering issues');
@@ -684,26 +679,26 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
           test: () => baseNFTReceiver.connect(unauthorizedUser).pause(),
         },
         {
-          name: 'Unauthorized unpause attempt', 
+          name: 'Unauthorized unpause attempt',
           test: () => baseNFTReceiver.connect(unauthorizedUser).unpause(),
         },
         {
           name: 'Unauthorized message marking',
-          test: () => baseNFTReceiver.connect(unauthorizedUser).adminMarkMessageProcessed(
-            ethers.hexlify(ethers.randomBytes(32))
-          ),
+          test: () =>
+            baseNFTReceiver
+              .connect(unauthorizedUser)
+              .adminMarkMessageProcessed(ethers.hexlify(ethers.randomBytes(32))),
         },
       ];
 
       for (const adminTest of adminTests) {
         console.log(`   🔒 Testing: ${adminTest.name}`);
-        
+
         try {
           await adminTest.test();
-          
+
           console.log(`     ❌ SECURITY VULNERABILITY: ${adminTest.name} succeeded!`);
           securityMetrics.vulnerabilitiesFound.push(`Unauthorized admin access: ${adminTest.name}`);
-          
         } catch (error: any) {
           console.log(`     ✅ ${adminTest.name} correctly blocked`);
           console.log(`       🔒 Error: ${error.message.slice(0, 50)}...`);
@@ -724,13 +719,12 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
         console.log(`   📋 Current contract owner: ${currentOwner}`);
 
         // Try to transfer ownership from unauthorized account
-        await baseNFTReceiver.connect(testEnv.wallets.bob).transferOwnership(
-          testEnv.wallets.bob.address
-        );
-        
+        await baseNFTReceiver
+          .connect(testEnv.wallets.bob)
+          .transferOwnership(testEnv.wallets.bob.address);
+
         console.log('   ❌ SECURITY VULNERABILITY: Unauthorized ownership transfer succeeded!');
         securityMetrics.vulnerabilitiesFound.push('Unauthorized ownership transfer allowed');
-        
       } catch (error: any) {
         console.log('   ✅ Unauthorized ownership transfer correctly blocked');
         console.log(`     🔒 Error: ${error.message.slice(0, 100)}...`);
@@ -742,10 +736,14 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
   after(function () {
     console.log('\n🛡️  SECURITY & ROBUSTNESS TESTS COMPLETED 🛡️');
     console.log('='.repeat(80));
-    
+
     // Generate security report
-    const attackSuccessRate = ((securityMetrics.attacksBlocked / Math.max(securityMetrics.totalAttacksAttempted, 1)) * 100);
-    const robustnessSuccessRate = (((securityMetrics.robustnessTests - securityMetrics.robustnessFailures) / Math.max(securityMetrics.robustnessTests, 1)) * 100);
+    const attackSuccessRate =
+      (securityMetrics.attacksBlocked / Math.max(securityMetrics.totalAttacksAttempted, 1)) * 100;
+    const robustnessSuccessRate =
+      ((securityMetrics.robustnessTests - securityMetrics.robustnessFailures) /
+        Math.max(securityMetrics.robustnessTests, 1)) *
+      100;
 
     console.log('📊 SECURITY TEST SUMMARY:');
     console.log(`   🎯 Total attack attempts: ${securityMetrics.totalAttacksAttempted}`);
@@ -766,7 +764,7 @@ describe('Universal NFT Protocol - Security & Robustness Tests', () => {
     console.log(`   ✅ Robustness success rate: ${robustnessSuccessRate.toFixed(1)}%`);
 
     console.log('\n🎯 SECURITY VERDICT:');
-    
+
     if (securityMetrics.vulnerabilitiesFound.length === 0 && attackSuccessRate > 90) {
       console.log('   ✅ EXCELLENT: Protocol demonstrates strong security posture');
       console.log('   ✅ All attack vectors successfully defended');
